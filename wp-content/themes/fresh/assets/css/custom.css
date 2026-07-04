@@ -1,0 +1,343 @@
+.ltn__product-item-3 .product-img {
+  background: #e2e2e2;
+border-radius: 10px;
+}
+
+.header-cart-icon {
+  display: inline-block;
+  margin-right: 18px;
+}
+
+.header-cart-icon a {
+  color: var(--ltn__heading-color);
+  display: inline-block;
+  font-size: 22px;
+  line-height: 1;
+  position: relative;
+}
+
+.header-cart-icon sup {
+  background: var(--ltn__secondary-color);
+  border-radius: 50%;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  height: 18px;
+  min-width: 18px;
+  padding: 0 5px;
+  position: absolute;
+  right: -12px;
+  top: -10px;
+}
+
+.site-logo .custom-logo-link {
+  align-items: center;
+  display: inline-flex;
+  max-width: 220px;
+}
+
+.site-logo .custom-logo {
+  height: auto;
+  max-height: 80px;
+  max-width: 100%;
+  object-fit: contain;
+  width: auto;
+}
+
+.ltn__utilize-mobile-menu .site-logo .custom-logo {
+  max-height: 64px;
+}
+
+.fresh-cart-added {
+  margin-bottom: 35px;
+}
+
+.fresh-cart-added a {
+  font-weight: 700;
+  margin-left: 10px;
+}
+
+.fresh-update-cart-btn {
+  background: var(--ltn__heading-color);
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  margin: 18px 0 12px;
+  min-height: 50px;
+  padding: 12px 24px;
+  width: 100%;
+}
+
+.fresh-update-cart-btn:hover {
+  background: var(--ltn__secondary-color);
+  color: #fff;
+}
+
+.shoping-cart-table .cart-product-image img {
+  height: 90px;
+  object-fit: contain;
+  width: 100px;
+}
+
+.shoping-cart-table .table {
+  min-width: 900px;
+}
+
+.shoping-cart-table th,
+.shoping-cart-table td {
+  text-align: center;
+}
+
+.shoping-cart-table .cart-product-remove {
+  width: 8%;
+}
+
+.shoping-cart-table .cart-product-image {
+  width: 14%;
+}
+
+.shoping-cart-table .cart-product-info {
+  text-align: left;
+  width: 32%;
+}
+
+.shoping-cart-table .cart-product-price,
+.shoping-cart-table .cart-product-quantity,
+.shoping-cart-table .cart-product-subtotal {
+  width: 15%;
+}
+
+.shoping-cart-table .cart-product-info h4 {
+  font-size: 18px;
+  margin-bottom: 0;
+}
+
+.shoping-cart-table .cart-product-remove a {
+  color: inherit;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.shoping-cart-table .cart-plus-minus {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.shoping-cart-table input.cart-plus-minus-box {
+  min-height: auto;
+  padding: 0;
+}
+
+.cart-coupon-row td {
+  align-items: center;
+  display: flex !important;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.cart-coupon {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.cart-coupon input {
+  height: 58px;
+}
+
+.shoping-cart-total {
+  clear: both;
+}
+
+.shoping-cart-total h4 {
+  margin-bottom: 20px;
+}
+
+.shoping-cart-total .table td:last-child {
+  text-align: right;
+}
+
+.shoping-cart-total .btn-wrapper {
+  text-align: right;
+}
+
+.ltn__product-item-3 .product-img > a {
+  align-items: center;
+  display: flex;
+  /* height: 260px; */
+  justify-content: center;
+  padding: 0px;
+  border-radius: 10px;
+  width: 100%;
+}
+
+.ltn__product-item-3 .product-img img {
+  height: auto !important;
+  max-height: 220px;
+border: 1px solid #e2e2e2;
+  position: relative;
+  width: 100% !important;
+  z-index: 1 !important;
+}
+
+.ltn__product-item-3 .product-title {
+  min-height: 42px;
+}
+
+.fresh-product-empty {
+  padding: 40px 15px;
+  text-align: center;
+  width: 100%;
+}
+
+.ltn__shop-details-img-gallery {
+  align-items: center;
+  background: #f7f8f3;
+  display: flex;
+  justify-content: center;
+  min-height: 520px;
+  padding: 20px;
+}
+
+.ltn__shop-details-img-gallery img {
+  height: auto !important;
+  max-height: 460px;
+  max-width: 100%;
+  object-fit: fill;
+  width: 100% !important;
+}
+
+.ltn__slide-item .slide-item-img img {
+  height: auto !important;
+  max-height: 560px;
+  max-width: 100%;
+  object-fit: contain;
+  width: auto !important;
+}
+
+.about-us-img-wrap img {
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.ltn__category-item-3 .ltn__category-item-img {
+  align-items: center;
+  display: flex;
+  height: 115px;
+  justify-content: center;
+}
+
+.ltn__category-item-3 .ltn__category-item-img img {
+  height: auto !important;
+  max-height: 90px;
+  max-width: 120px;
+  object-fit: contain;
+  width: auto !important;
+}
+
+.ltn__blog-item-3 .ltn__blog-img img,
+.ltn__blog-details-wrap .ltn__blog-img img,
+.popular-post-widget-img img,
+.ltn__banner-widget img {
+  width: 100%;
+}
+
+.ltn__blog-item-3 .ltn__blog-img img {
+  height: 260px;
+  object-fit: cover;
+}
+
+.ltn__blog-details-wrap .ltn__blog-img img {
+  height: auto;
+  object-fit: cover;
+}
+
+.popular-post-widget-img img {
+  height: 80px;
+  object-fit: cover;
+}
+
+.fresh-single-content img {
+  height: auto;
+  max-width: 100%;
+}
+
+.comments-area {
+  margin-top: 60px;
+}
+
+.comments-area .comment-list {
+  list-style: none;
+  margin: 0 0 50px;
+  padding: 0;
+}
+
+.comments-area .comment-body {
+  border-top: 1px solid var(--border-color-12);
+  padding: 25px 0;
+}
+
+.comments-area .comment-form input[type="text"],
+.comments-area .comment-form input[type="email"],
+.comments-area .comment-form input[type="url"],
+.comments-area .comment-form textarea {
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .ltn__product-item-3 .product-img > a {
+    height: 190px;
+    padding: 16px;
+  }
+
+  .ltn__product-item-3 .product-img img {
+    max-height: 160px;
+  }
+
+  .ltn__shop-details-img-gallery {
+    min-height: 320px;
+    padding: 5px;
+  }
+
+  .shoping-cart-table .table {
+    min-width: 0;
+  }
+
+  .shoping-cart-table .cart-product-info,
+  .shoping-cart-table th,
+  .shoping-cart-table td {
+    text-align: center;
+    width: 100%;
+  }
+
+  .cart-coupon-row td,
+  .cart-coupon {
+    align-items: stretch;
+    display: block !important;
+  }
+
+  .cart-coupon input,
+  .cart-coupon .btn,
+  .cart-coupon-row .theme-btn-1 {
+    margin-bottom: 15px;
+    width: 100%;
+  }
+
+  .shoping-cart-total,
+  .shoping-cart-total .btn-wrapper {
+    text-align: center;
+  }
+
+  .ltn__slide-item .slide-item-img img {
+    max-height: 300px;
+  }
+
+  .ltn__blog-item-3 .ltn__blog-img img {
+    height: 210px;
+  }
+}
