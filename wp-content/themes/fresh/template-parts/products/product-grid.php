@@ -22,7 +22,7 @@ if (! empty($_GET['category'])) {
 $products = new WP_Query($query_args);
 ?>
 
-<section class="ltn__product-area ltn__product-gutter pt-115 pb-70">
+<section class="ltn__product-area ltn__product-gutter fresh-product-section fresh-product-section-featured pt-115 pb-70">
     <div class="container">
         <?php if (isset($_GET['fresh_added'])) : ?>
             <div class="alert alert-success fresh-cart-added">
@@ -33,8 +33,10 @@ $products = new WP_Query($query_args);
 
         <div class="row">
             <div class="col-lg-12">
-                <div class="section-title-area ltn__section-title-2 text-center">
+                <div class="section-title-area ltn__section-title-2 text-center fresh-products-heading">
+                    <span class="fresh-section-kicker"><?php esc_html_e('Customer Favorites', 'fresh'); ?></span>
                     <h1 class="section-title"><?php echo esc_html($title); ?></h1>
+                    <p><?php esc_html_e('Popular picks selected for freshness, value, and everyday use.', 'fresh'); ?></p>
                 </div>
             </div>
         </div>

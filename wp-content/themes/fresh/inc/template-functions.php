@@ -21,12 +21,32 @@ function fresh_primary_menu_fallback()
     ?>
     <ul>
         <li><a href="<?php echo esc_url(home_url('/')); ?>"><?php esc_html_e('Home', 'fresh'); ?></a></li>
-        <li><a href="<?php echo esc_url(home_url('/about/')); ?>"><?php esc_html_e('About', 'fresh'); ?></a></li>
         <li><a href="<?php echo esc_url(home_url('/shop/')); ?>"><?php esc_html_e('Shop', 'fresh'); ?></a></li>
         <li><a href="<?php echo esc_url(home_url('/contact/')); ?>"><?php esc_html_e('Contact', 'fresh'); ?></a></li>
      </ul>
     <?php
 }
+
+function fresh_remove_about_from_primary_menu($items, $args)
+{
+    if (empty($args->theme_location) || $args->theme_location !== 'primary') {
+        return $items;
+    }
+
+    $about_page = get_page_by_path('about');
+    $about_id   = $about_page ? (int) $about_page->ID : 0;
+
+    return array_values(array_filter($items, function ($item) use ($about_id) {
+        $url_path = trim((string) wp_parse_url($item->url, PHP_URL_PATH), '/');
+
+        if ($about_id && (int) $item->object_id === $about_id) {
+            return false;
+        }
+
+        return $url_path !== 'about' && substr($url_path, -6) !== '/about';
+    }));
+}
+add_filter('wp_nav_menu_objects', 'fresh_remove_about_from_primary_menu', 10, 2);
 
 function fresh_logo_attachment_id()
 {

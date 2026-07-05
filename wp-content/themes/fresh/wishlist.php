@@ -31,9 +31,9 @@ fresh_breadcrumb_banner(__('Wishlist', 'fresh'), __('Saved products', 'fresh'));
                                     </thead>
                                     <tbody>
                                         <?php foreach ($items as $product) : ?>
-                                            <tr>
+                                            <tr class="fresh-wishlist-item">
                                                 <td class="cart-product-remove">
-                                                    <a href="<?php echo esc_url(fresh_remove_from_wishlist_url($product->ID)); ?>" aria-label="<?php esc_attr_e('Remove item', 'fresh'); ?>">x</a>
+                                                    <a class="fresh-remove-from-wishlist" href="<?php echo esc_url(fresh_remove_from_wishlist_url($product->ID)); ?>" data-product-id="<?php echo esc_attr($product->ID); ?>" aria-label="<?php esc_attr_e('Remove item', 'fresh'); ?>">x</a>
                                                 </td>
                                                 <td class="cart-product-image">
                                                     <a href="<?php echo esc_url(fresh_product_detail_url($product->ID)); ?>">

@@ -15,8 +15,21 @@
         }, 2200));
     }
 
-    function postAction(action, productId, successMessage, $trigger) {
+    function followFallback($trigger, quantity) {
+        var href = $trigger.attr('href');
+
+        if (href && href !== '#') {
+            if (quantity) {
+                href = href.replace(/([?&]quantity=)[^&]*/, '$1' + Math.max(1, parseInt(quantity, 10) || 1));
+            }
+
+            window.location.href = href;
+        }
+    }
+
+    function postAction(action, productId, successMessage, $trigger, quantity) {
         if (!productId || !window.freshShop) {
+            followFallback($trigger, quantity);
             return;
         }
 
@@ -25,10 +38,12 @@
         $.post(freshShop.ajaxUrl, {
             action: action,
             nonce: freshShop.nonce,
-            product_id: productId
+            product_id: productId,
+            quantity: Math.max(1, parseInt(quantity, 10) || 1)
         }).done(function (response) {
             if (!response || !response.success) {
                 showNotice((response && response.data && response.data.message) || freshShop.errorMessage);
+                followFallback($trigger, quantity);
                 return;
             }
 
@@ -44,6 +59,7 @@
             showNotice(response.data.message || successMessage);
         }).fail(function () {
             showNotice(freshShop.errorMessage);
+            followFallback($trigger, quantity);
         }).always(function () {
             $trigger.removeClass('is-loading').removeAttr('aria-busy');
         });
@@ -99,13 +115,60 @@
     }
 
     $(document).on('click', '.fresh-add-to-cart', function (event) {
+        var $trigger = $(this);
+        var quantity = $trigger.closest('.ltn__product-item, tr, .fresh-single-product, .product-details-area').find('.fresh-card-qty, input[name="quantity"], .cart-plus-minus-box').first().val();
+        var successMessage = window.freshShop ? freshShop.addedToCart : '';
+
         event.preventDefault();
-        postAction('fresh_add_to_cart', $(this).data('product-id'), freshShop.addedToCart, $(this));
+        postAction('fresh_add_to_cart', $trigger.data('product-id'), successMessage, $trigger, quantity);
     });
 
     $(document).on('click', '.fresh-add-to-wishlist', function (event) {
+        var $trigger = $(this);
+        var successMessage = window.freshShop ? freshShop.addedWishlist : '';
+
         event.preventDefault();
-        postAction('fresh_add_to_wishlist', $(this).data('product-id'), freshShop.addedWishlist, $(this));
+        postAction('fresh_add_to_wishlist', $trigger.data('product-id'), successMessage, $trigger);
+    });
+
+    $(document).on('click', '.fresh-remove-from-wishlist', function (event) {
+        var $trigger = $(this);
+        var productId = $trigger.data('product-id');
+
+        if (!productId || !window.freshShop) {
+            return;
+        }
+
+        event.preventDefault();
+        $trigger.addClass('is-loading').attr('aria-busy', 'true');
+
+        $.post(freshShop.ajaxUrl, {
+            action: 'fresh_remove_from_wishlist',
+            nonce: freshShop.nonce,
+            product_id: productId
+        }).done(function (response) {
+            if (!response || !response.success) {
+                showNotice((response && response.data && response.data.message) || freshShop.errorMessage);
+                followFallback($trigger);
+                return;
+            }
+
+            if (typeof response.data.wishlistCount !== 'undefined') {
+                $('.fresh-wishlist-count').text(response.data.wishlistCount);
+            }
+
+            $trigger.closest('.fresh-wishlist-item').remove();
+            showNotice(response.data.message || 'Product removed from wishlist.');
+
+            if (response.data.isEmpty) {
+                window.location.reload();
+            }
+        }).fail(function () {
+            showNotice(freshShop.errorMessage);
+            followFallback($trigger);
+        }).always(function () {
+            $trigger.removeClass('is-loading').removeAttr('aria-busy');
+        });
     });
 
     $(document).on('input change', '.fresh-cart-qty', refreshCartTotals);

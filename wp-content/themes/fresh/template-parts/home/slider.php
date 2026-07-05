@@ -19,10 +19,9 @@
                                             <p><?php echo esc_html(fresh_home_option('hero_' . $i . '_text')); ?></p>
                                         </div>
                                         <div class="btn-wrapper animated">
-                                            <a href="<?php echo esc_url(fresh_page_url('shop')); ?>" class="theme-btn-1 btn btn-effect-1 text-uppercase"><?php esc_html_e('Explore Products', 'fresh'); ?></a>
-                                            <?php if ($i === 2) : ?>
-                                                <a href="<?php echo esc_url(home_url('/about/')); ?>" class="btn btn-transparent btn-effect-3"><?php esc_html_e('Learn More', 'fresh'); ?></a>
-                                            <?php endif; ?>
+                                            <a href="<?php echo esc_url(fresh_page_url('shop')); ?>" class="theme-btn-1 btn btn-effect-1 text-uppercase"><?php esc_html_e('Shop Now', 'fresh'); ?></a>
+                                            <a href="<?php echo esc_url(fresh_page_url('cart')); ?>" class="btn btn-transparent btn-effect-3"><?php esc_html_e('View Cart', 'fresh'); ?></a>
+                                             
                                         </div>
                                     </div>
                                 </div>

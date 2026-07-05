@@ -23,9 +23,9 @@ $product_number = isset($args['product_number']) ? absint($args['product_number'
             </a>
             <div class="product-badge">
                 <ul>
-                    <a class="fresh-add-to-wishlist" href="<?php echo esc_url(fresh_add_to_wishlist_url($product->ID)); ?>" data-product-id="<?php echo esc_attr($product->ID); ?>" title="<?php esc_attr_e('Wishlist', 'fresh'); ?>" aria-label="<?php esc_attr_e('Add to Wishlist', 'fresh'); ?>">
+                    <li><a class="fresh-add-to-wishlist" href="<?php echo esc_url(fresh_add_to_wishlist_url($product->ID)); ?>" data-product-id="<?php echo esc_attr($product->ID); ?>" title="<?php esc_attr_e('Wishlist', 'fresh'); ?>" aria-label="<?php esc_attr_e('Add to Wishlist', 'fresh'); ?>">
                             <i class="far fa-heart"></i>
-                    </a>
+                    </a></li>
                 </ul>
             </div>
  
@@ -48,9 +48,12 @@ $product_number = isset($args['product_number']) ? absint($args['product_number'
                         </a>
                     </h2>
                 </div>
-                <a class="product-cart-btn fresh-add-to-cart" href="<?php echo esc_url(fresh_add_to_cart_url($product->ID)); ?>" data-product-id="<?php echo esc_attr($product->ID); ?>" title="<?php esc_attr_e('Add to Cart', 'fresh'); ?>" aria-label="<?php esc_attr_e('Add to Cart', 'fresh'); ?>">
-                    <i class="fas fa-shopping-cart"></i>
-                </a>
+                <div class="fresh-card-cart-control">
+                    <input class="fresh-card-qty" type="number" min="1" step="1" value="1" aria-label="<?php esc_attr_e('Quantity', 'fresh'); ?>">
+                    <a class="product-cart-btn fresh-add-to-cart" href="<?php echo esc_url(fresh_add_to_cart_url($product->ID)); ?>" data-product-id="<?php echo esc_attr($product->ID); ?>" title="<?php esc_attr_e('Add to Cart', 'fresh'); ?>" aria-label="<?php esc_attr_e('Add to Cart', 'fresh'); ?>">
+                        <i class="fas fa-shopping-cart"></i>
+                    </a>
+                </div>
             </div>
             <div class="product-card-bottom">
                 <div class="product-price">

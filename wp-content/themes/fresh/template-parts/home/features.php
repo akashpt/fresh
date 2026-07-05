@@ -30,7 +30,7 @@ $features = fresh_home_features($variant);
         </div>
     </div>
 <?php else : ?>
-    <div class="ltn__feature-area mt-100 mt--65">
+    <div class="ltn__feature-area mt-100 mt--65 d-none">
         <div class="container">
             <div class="row ltn__custom-gutter--- justify-content-center">
                 <div class="col-lg-12">

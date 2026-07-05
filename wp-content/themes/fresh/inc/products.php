@@ -756,6 +756,48 @@ function fresh_coupon_cookie_name()
     return 'fresh_coupon';
 }
 
+function fresh_set_storefront_cookie($name, $value, $expires)
+{
+    $path   = fresh_storefront_cookie_path();
+    $domain = COOKIE_DOMAIN ?: '';
+
+    if (PHP_VERSION_ID >= 70300) {
+        $options = [
+            'expires'  => $expires,
+            'path'     => $path,
+            'secure'   => is_ssl(),
+            'httponly' => false,
+            'samesite' => 'Lax',
+        ];
+
+        if ($domain !== '') {
+            $options['domain'] = $domain;
+        }
+
+        setcookie($name, $value, $options);
+        return;
+    }
+
+    setcookie($name, $value, $expires, $path, $domain);
+}
+
+function fresh_storefront_cookie_path()
+{
+    $script_name = isset($_SERVER['SCRIPT_NAME']) ? wp_unslash($_SERVER['SCRIPT_NAME']) : '';
+    $script_name = str_replace('\\', '/', $script_name);
+
+    if (strpos($script_name, '/wp-admin/') !== false) {
+        $path = strtok($script_name, '?');
+        $path = substr($path, 0, strpos($path, '/wp-admin/') + 1);
+
+        return $path ?: '/';
+    }
+
+    $path = wp_parse_url(home_url('/'), PHP_URL_PATH);
+
+    return $path ?: '/';
+}
+
 function fresh_get_cart()
 {
     if (empty($_COOKIE[fresh_cart_cookie_name()])) {
@@ -767,14 +809,30 @@ function fresh_get_cart()
         return [];
     }
 
-    return array_filter(array_map('absint', $cart));
+    return fresh_sanitize_cart($cart);
 }
 
 function fresh_set_cart($cart)
 {
-    $cart = array_filter(array_map('absint', $cart));
-    setcookie(fresh_cart_cookie_name(), wp_json_encode($cart), time() + MONTH_IN_SECONDS, COOKIEPATH ?: '/', COOKIE_DOMAIN);
+    $cart = fresh_sanitize_cart($cart);
+    fresh_set_storefront_cookie(fresh_cart_cookie_name(), wp_json_encode($cart), time() + MONTH_IN_SECONDS);
     $_COOKIE[fresh_cart_cookie_name()] = wp_json_encode($cart);
+}
+
+function fresh_sanitize_cart($cart)
+{
+    $clean = [];
+
+    foreach ((array) $cart as $product_id => $quantity) {
+        $product_id = absint($product_id);
+        $quantity   = absint($quantity);
+
+        if ($product_id > 0 && $quantity > 0) {
+            $clean[$product_id] = $quantity;
+        }
+    }
+
+    return $clean;
 }
 
 function fresh_get_applied_coupon_code()
@@ -791,12 +849,12 @@ function fresh_set_applied_coupon_code($code)
     $code = fresh_sanitize_coupon_code($code);
 
     if ($code === '') {
-        setcookie(fresh_coupon_cookie_name(), '', time() - HOUR_IN_SECONDS, COOKIEPATH ?: '/', COOKIE_DOMAIN);
+        fresh_set_storefront_cookie(fresh_coupon_cookie_name(), '', time() - HOUR_IN_SECONDS);
         unset($_COOKIE[fresh_coupon_cookie_name()]);
         return;
     }
 
-    setcookie(fresh_coupon_cookie_name(), $code, time() + MONTH_IN_SECONDS, COOKIEPATH ?: '/', COOKIE_DOMAIN);
+    fresh_set_storefront_cookie(fresh_coupon_cookie_name(), $code, time() + MONTH_IN_SECONDS);
     $_COOKIE[fresh_coupon_cookie_name()] = $code;
 }
 
@@ -912,7 +970,7 @@ function fresh_get_wishlist()
 function fresh_set_wishlist($wishlist)
 {
     $wishlist = array_values(array_unique(array_filter(array_map('absint', $wishlist))));
-    setcookie(fresh_wishlist_cookie_name(), wp_json_encode($wishlist), time() + MONTH_IN_SECONDS, COOKIEPATH ?: '/', COOKIE_DOMAIN);
+    fresh_set_storefront_cookie(fresh_wishlist_cookie_name(), wp_json_encode($wishlist), time() + MONTH_IN_SECONDS);
     $_COOKIE[fresh_wishlist_cookie_name()] = wp_json_encode($wishlist);
 }
 
@@ -1069,7 +1127,7 @@ function fresh_handle_cart_actions()
         exit;
     }
 }
-add_action('template_redirect', 'fresh_handle_cart_actions');
+add_action('template_redirect', 'fresh_handle_cart_actions', -5);
 
 function fresh_add_to_cart_url($product_id, $quantity = 1)
 {
@@ -1154,6 +1212,28 @@ function fresh_ajax_add_to_wishlist()
 }
 add_action('wp_ajax_fresh_add_to_wishlist', 'fresh_ajax_add_to_wishlist');
 add_action('wp_ajax_nopriv_fresh_add_to_wishlist', 'fresh_ajax_add_to_wishlist');
+
+function fresh_ajax_remove_from_wishlist()
+{
+    check_ajax_referer('fresh_storefront', 'nonce');
+
+    $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
+
+    if (! $product_id) {
+        wp_send_json_error(['message' => __('Product not found.', 'fresh')], 404);
+    }
+
+    $wishlist = array_values(array_diff(fresh_get_wishlist(), [$product_id]));
+    fresh_set_wishlist($wishlist);
+
+    wp_send_json_success([
+        'message'       => __('Product removed from wishlist.', 'fresh'),
+        'wishlistCount' => fresh_wishlist_count(),
+        'isEmpty'       => fresh_wishlist_count() === 0,
+    ]);
+}
+add_action('wp_ajax_fresh_remove_from_wishlist', 'fresh_ajax_remove_from_wishlist');
+add_action('wp_ajax_nopriv_fresh_remove_from_wishlist', 'fresh_ajax_remove_from_wishlist');
 
 function fresh_handle_checkout()
 {
