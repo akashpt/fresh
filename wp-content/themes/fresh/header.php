@@ -80,3 +80,22 @@
         </div>
         <!-- ltn__header-middle-area end -->
     </header>
+
+    <div class="fresh-mobile-store-bar" aria-label="<?php esc_attr_e('Store shortcuts', 'fresh'); ?>">
+        <a href="<?php echo esc_url(fresh_page_url('cart')); ?>" class="fresh-mobile-store-link fresh-mobile-store-cart">
+            <span class="fresh-mobile-store-icon">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="fresh-mobile-store-count fresh-cart-count"><?php echo esc_html(fresh_cart_count()); ?></span>
+            </span>
+            <span><?php esc_html_e('Cart', 'fresh'); ?></span>
+        </a>
+        <a href="<?php echo esc_url(fresh_page_url('wishlist')); ?>" class="fresh-mobile-store-link fresh-mobile-store-wishlist">
+            <span class="fresh-mobile-store-icon">
+                <i class="far fa-heart"></i>
+                <span class="fresh-mobile-store-count fresh-wishlist-count"><?php echo esc_html(fresh_wishlist_count()); ?></span>
+            </span>
+            <span><?php esc_html_e('Wishlist', 'fresh'); ?></span>
+        </a>
+    </div>
+
+    <?php get_template_part('template-parts/layout/offcanvas'); ?>

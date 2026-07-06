@@ -6736,7 +6736,8 @@ position: relative;}
   display: flex;
   -webkit-box-align: center;
   -ms-flex-align: center;
-  align-items: center;
+  align-items: start;
+  flex-direction: column;
   -webkit-box-pack: justify;
   -ms-flex-pack: justify;
   justify-content: space-between;
@@ -10145,7 +10146,7 @@ input.cart-plus-minus-box {
   width: 104px;
   height: 34px;
   line-height: 30px;
-  border-radius: 999px; }
+  border-radius: 5px; }
 
 .fresh-cart-quantity .qtybutton {
   width: 30%;

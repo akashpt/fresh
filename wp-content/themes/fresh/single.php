@@ -4,7 +4,6 @@
  */
 
 get_header();
-get_template_part('template-parts/layout/offcanvas');
 ?>
 
 <main id="primary" class="site-main">

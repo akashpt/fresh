@@ -781,6 +781,58 @@ function fresh_set_storefront_cookie($name, $value, $expires)
     setcookie($name, $value, $expires, $path, $domain);
 }
 
+function fresh_clear_legacy_admin_cookie($name)
+{
+    $script_name = isset($_SERVER['SCRIPT_NAME']) ? wp_unslash($_SERVER['SCRIPT_NAME']) : '';
+    $script_name = str_replace('\\', '/', $script_name);
+
+    if (strpos($script_name, '/wp-admin/') === false) {
+        return;
+    }
+
+    $admin_path = substr($script_name, 0, strpos($script_name, '/wp-admin/') + 10);
+    $domain     = COOKIE_DOMAIN ?: '';
+
+    if (PHP_VERSION_ID >= 70300) {
+        $options = [
+            'expires'  => time() - HOUR_IN_SECONDS,
+            'path'     => $admin_path,
+            'secure'   => is_ssl(),
+            'httponly' => false,
+            'samesite' => 'Lax',
+        ];
+
+        if ($domain !== '') {
+            $options['domain'] = $domain;
+        }
+
+        setcookie($name, '', $options);
+        return;
+    }
+
+    setcookie($name, '', time() - HOUR_IN_SECONDS, $admin_path, $domain);
+}
+
+function fresh_storefront_cookie_value($name)
+{
+    if (empty($_SERVER['HTTP_COOKIE'])) {
+        return isset($_COOKIE[$name]) ? wp_unslash($_COOKIE[$name]) : '';
+    }
+
+    $value = '';
+    $pairs = explode(';', wp_unslash($_SERVER['HTTP_COOKIE']));
+
+    foreach ($pairs as $pair) {
+        $parts = explode('=', trim($pair), 2);
+
+        if (count($parts) === 2 && $parts[0] === $name) {
+            $value = urldecode($parts[1]);
+        }
+    }
+
+    return $value !== '' ? $value : (isset($_COOKIE[$name]) ? wp_unslash($_COOKIE[$name]) : '');
+}
+
 function fresh_storefront_cookie_path()
 {
     $script_name = isset($_SERVER['SCRIPT_NAME']) ? wp_unslash($_SERVER['SCRIPT_NAME']) : '';
@@ -800,11 +852,17 @@ function fresh_storefront_cookie_path()
 
 function fresh_get_cart()
 {
-    if (empty($_COOKIE[fresh_cart_cookie_name()])) {
+    if (isset($GLOBALS['fresh_current_cart']) && is_array($GLOBALS['fresh_current_cart'])) {
+        return $GLOBALS['fresh_current_cart'];
+    }
+
+    $cart_cookie = fresh_storefront_cookie_value(fresh_cart_cookie_name());
+
+    if ($cart_cookie === '') {
         return [];
     }
 
-    $cart = json_decode(stripslashes($_COOKIE[fresh_cart_cookie_name()]), true);
+    $cart = json_decode(stripslashes($cart_cookie), true);
     if (! is_array($cart)) {
         return [];
     }
@@ -815,7 +873,9 @@ function fresh_get_cart()
 function fresh_set_cart($cart)
 {
     $cart = fresh_sanitize_cart($cart);
+    $GLOBALS['fresh_current_cart'] = $cart;
     fresh_set_storefront_cookie(fresh_cart_cookie_name(), wp_json_encode($cart), time() + MONTH_IN_SECONDS);
+    fresh_clear_legacy_admin_cookie(fresh_cart_cookie_name());
     $_COOKIE[fresh_cart_cookie_name()] = wp_json_encode($cart);
 }
 
@@ -1169,7 +1229,8 @@ function fresh_ajax_add_to_cart()
     check_ajax_referer('fresh_storefront', 'nonce');
 
     $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
-    $quantity   = isset($_POST['quantity']) ? max(1, absint($_POST['quantity'])) : 1;
+    $set_quantity = ! empty($_POST['set_quantity']);
+    $quantity   = isset($_POST['quantity']) ? absint($_POST['quantity']) : 1;
     $product    = $product_id ? get_post($product_id) : null;
 
     if (! $product || $product->post_type !== 'fresh_product' || $product->post_status !== 'publish') {
@@ -1177,16 +1238,59 @@ function fresh_ajax_add_to_cart()
     }
 
     $cart = fresh_get_cart();
-    $cart[$product_id] = isset($cart[$product_id]) ? $cart[$product_id] + $quantity : $quantity;
+
+    if ($set_quantity) {
+        if ($quantity > 0) {
+            $cart[$product_id] = $quantity;
+        } else {
+            unset($cart[$product_id]);
+        }
+    } else {
+        $quantity = max(1, $quantity);
+        $cart[$product_id] = isset($cart[$product_id]) ? $cart[$product_id] + $quantity : $quantity;
+    }
+
     fresh_set_cart($cart);
 
+    if (! $cart) {
+        fresh_set_applied_coupon_code('');
+    }
+
     wp_send_json_success([
-        'message'   => __('Product added to cart.', 'fresh'),
-        'cartCount' => fresh_cart_count(),
+        'message'         => $set_quantity ? __('Cart updated.', 'fresh') : __('Product added to cart.', 'fresh'),
+        'cartCount'       => fresh_cart_count(),
+        'productQuantity' => isset($cart[$product_id]) ? $cart[$product_id] : 0,
     ]);
 }
 add_action('wp_ajax_fresh_add_to_cart', 'fresh_ajax_add_to_cart');
 add_action('wp_ajax_nopriv_fresh_add_to_cart', 'fresh_ajax_add_to_cart');
+
+function fresh_ajax_remove_from_cart()
+{
+    check_ajax_referer('fresh_storefront', 'nonce');
+
+    $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
+
+    if (! $product_id) {
+        wp_send_json_error(['message' => __('Product not found.', 'fresh')], 404);
+    }
+
+    $cart = fresh_get_cart();
+    unset($cart[$product_id]);
+    fresh_set_cart($cart);
+
+    if (! $cart) {
+        fresh_set_applied_coupon_code('');
+    }
+
+    wp_send_json_success([
+        'message'   => __('Product removed from cart.', 'fresh'),
+        'cartCount' => fresh_cart_count(),
+        'isEmpty'   => fresh_cart_count() === 0,
+    ]);
+}
+add_action('wp_ajax_fresh_remove_from_cart', 'fresh_ajax_remove_from_cart');
+add_action('wp_ajax_nopriv_fresh_remove_from_cart', 'fresh_ajax_remove_from_cart');
 
 function fresh_ajax_add_to_wishlist()
 {
@@ -1339,7 +1443,20 @@ function fresh_order_whatsapp_message($order_id)
 
     $lines[] = __('Total: ', 'fresh') . fresh_format_price($total);
 
+    $image_url = fresh_order_whatsapp_image_url();
+    if ($image_url) {
+        $lines[] = '';
+        $lines[] = __('Order Image: ', 'fresh') . $image_url;
+    }
+
     return implode("\n", $lines);
+}
+
+function fresh_order_whatsapp_image_url()
+{
+    $image_url = get_template_directory_uri() . '/assets/img/logo.png';
+
+    return esc_url_raw(apply_filters('fresh_order_whatsapp_image_url', $image_url));
 }
 
 function fresh_order_whatsapp_url($order_id)

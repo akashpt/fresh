@@ -5,7 +5,6 @@
 
 get_header();
 ?>
-<?php get_template_part('template-parts/layout/offcanvas'); ?>
 
 <?php get_template_part('template-parts/home/slider'); ?>
 

@@ -25,6 +25,7 @@ function fresh_theme_enqueue_assets()
         'addedToCart'   => __('Product added to cart.', 'fresh'),
         'addedWishlist' => __('Product added to wishlist.', 'fresh'),
         'errorMessage'  => __('Something went wrong. Please try again.', 'fresh'),
+        'shopUrl'       => fresh_page_url('shop'),
     ]);
 
     if (is_singular() && comments_open() && get_option('thread_comments')) {

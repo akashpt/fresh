@@ -13,6 +13,20 @@ $cart_total = fresh_cart_total();
 $cart_count = fresh_cart_count();
 $applied_coupon = fresh_get_applied_coupon_code();
 $applied_coupon_data = $applied_coupon ? fresh_find_coupon($applied_coupon) : null;
+$cart_product_discount = 0;
+
+foreach ($items as $item) {
+    $product_id = $item['product']->ID;
+    $regular_price = (float) get_post_meta($product_id, '_fresh_product_price', true);
+    $sale_price = (float) get_post_meta($product_id, '_fresh_product_sale_price', true);
+    $quantity = absint($item['quantity']);
+
+    if ($regular_price > 0 && $sale_price > 0 && $sale_price < $regular_price) {
+        $cart_product_discount += ($regular_price - $sale_price) * $quantity;
+    }
+}
+
+$cart_total_discount = $cart_product_discount + $cart_discount;
 
 fresh_breadcrumb_banner(__('Cart', 'fresh'), __('Shopping cart', 'fresh'));
 ?>
@@ -48,6 +62,10 @@ fresh_breadcrumb_banner(__('Cart', 'fresh'), __('Shopping cart', 'fresh'));
                                     $product = $item['product'];
                                     $unit = get_post_meta($product->ID, '_fresh_product_unit', true);
                                     $sku = get_post_meta($product->ID, '_fresh_product_sku', true);
+                                    $regular_price = (float) get_post_meta($product->ID, '_fresh_product_price', true);
+                                    $sale_price = (float) get_post_meta($product->ID, '_fresh_product_sale_price', true);
+                                    $has_product_discount = $regular_price > 0 && $sale_price > 0 && $sale_price < $regular_price;
+                                    $line_product_discount = $has_product_discount ? ($regular_price - $sale_price) * absint($item['quantity']) : 0;
                                     ?>
                                     <div class="fresh-cart-item">
                                         <a class="fresh-cart-item-image" href="<?php echo esc_url(fresh_product_detail_url($product->ID)); ?>">
@@ -76,10 +94,14 @@ fresh_breadcrumb_banner(__('Cart', 'fresh'), __('Shopping cart', 'fresh'));
                                         </div>
 
                                         <div class="fresh-cart-item-total">
-                                            <a class="fresh-cart-remove" href="<?php echo esc_url(fresh_remove_from_cart_url($product->ID)); ?>" aria-label="<?php esc_attr_e('Remove item', 'fresh'); ?>">
+                                            <a class="fresh-cart-remove" href="<?php echo esc_url(fresh_remove_from_cart_url($product->ID)); ?>" data-product-id="<?php echo esc_attr($product->ID); ?>" aria-label="<?php esc_attr_e('Remove item', 'fresh'); ?>">
                                                 <i class="fas fa-trash-alt"></i>
                                             </a>
-                                            <strong class="fresh-cart-line-subtotal" data-price="<?php echo esc_attr($item['price']); ?>"><?php echo esc_html(fresh_format_price($item['subtotal'])); ?></strong>
+                                            <strong class="fresh-cart-line-subtotal" data-price="<?php echo esc_attr($item['price']); ?>" data-regular-price="<?php echo esc_attr($has_product_discount ? $regular_price : $item['price']); ?>"><?php echo esc_html(fresh_format_price($item['subtotal'])); ?></strong>
+                                            <?php if ($has_product_discount) : ?>
+                                                <del class="fresh-cart-line-regular"><?php echo esc_html(fresh_format_price($regular_price * absint($item['quantity']))); ?></del>
+                                                <em class="fresh-cart-line-save"><?php echo esc_html(sprintf(__('Save %s', 'fresh'), fresh_format_price($line_product_discount))); ?></em>
+                                            <?php endif; ?>
                                             <small><?php echo esc_html($item['quantity']); ?> x <?php echo esc_html(fresh_format_price($item['price'])); ?></small>
                                         </div>
                                     </div>
@@ -96,9 +118,21 @@ fresh_breadcrumb_banner(__('Cart', 'fresh'), __('Shopping cart', 'fresh'));
                                     <strong class="fresh-cart-subtotal"><?php echo esc_html(fresh_format_price($cart_subtotal)); ?></strong>
                                 </div>
                                 <div>
+                                    <span><?php esc_html_e('Product Discount', 'fresh'); ?></span>
+                                    <strong class="fresh-summary-success fresh-cart-product-discount">
+                                        <?php echo esc_html($cart_product_discount > 0 ? '-' . fresh_format_price($cart_product_discount) : fresh_format_price(0)); ?>
+                                    </strong>
+                                </div>
+                                <div>
+                                    <span><?php esc_html_e('Coupon Discount', 'fresh'); ?></span>
+                                    <strong class="fresh-summary-success fresh-cart-coupon-discount">
+                                        <?php echo esc_html($cart_discount > 0 ? '-' . fresh_format_price($cart_discount) : fresh_format_price(0)); ?>
+                                    </strong>
+                                </div>
+                                <div class="fresh-summary-discount-total">
                                     <span><?php esc_html_e('Total Discount', 'fresh'); ?></span>
                                     <strong class="fresh-summary-success fresh-cart-discount">
-                                        <?php echo esc_html($cart_discount > 0 ? '-' . fresh_format_price($cart_discount) : fresh_format_price(0)); ?>
+                                        <?php echo esc_html($cart_total_discount > 0 ? '-' . fresh_format_price($cart_total_discount) : fresh_format_price(0)); ?>
                                     </strong>
                                 </div>
                                 <div>
