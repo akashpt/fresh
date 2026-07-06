@@ -793,7 +793,7 @@ function fresh_product_price($product_id)
 
 function fresh_format_price($price)
 {
-    return '$' . number_format((float) $price, 2);
+    return '₹' . number_format((float) $price, 2);
 }
 
 function fresh_product_detail_url($product_id)

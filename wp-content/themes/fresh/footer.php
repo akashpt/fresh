@@ -71,8 +71,8 @@
                                             </div>
                                             <h3>Vegetables Juices</h3>
                                             <div class="product-price">
-                                                <span>$149.00</span>
-                                                <del>$165.00</del>
+                                                <span>₹149.00</span>
+                                                <del>₹165.00</del>
                                             </div>
                                             <div class="modal-product-meta ltn__product-details-menu-1">
                                                 <ul>

@@ -38,7 +38,7 @@ $cart_total = fresh_cart_total();
                 <a href="<?php echo esc_url(fresh_page_url('cart')); ?>" class="theme-btn-1 btn btn-effect-1"><?php esc_html_e('View Cart', 'fresh'); ?></a>
                 <a href="<?php echo esc_url(fresh_page_url('checkout')); ?>" class="theme-btn-2 btn btn-effect-2"><?php esc_html_e('Checkout', 'fresh'); ?></a>
             </div>
-            <p><?php esc_html_e('Free Shipping on All Orders Over $100!', 'fresh'); ?></p>
+            <p><?php esc_html_e('Free Shipping on All Orders Over ₹100!', 'fresh'); ?></p>
         </div>
     </div>
 </div>
