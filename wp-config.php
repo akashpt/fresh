@@ -93,7 +93,22 @@ define( 'WP_DEBUG', false );
 
 /* Add any custom values between this line and the "stop editing" line. */
 
+if ( isset( $_SERVER['HTTP_HOST'] ) ) {
+	$protocol = ( ! empty( $_SERVER['HTTPS'] ) && 'off' !== $_SERVER['HTTPS'] ) ? 'https://' : 'http://';
+	$document_root = isset( $_SERVER['DOCUMENT_ROOT'] ) ? realpath( $_SERVER['DOCUMENT_ROOT'] ) : '';
+	$install_path = realpath( __DIR__ );
+	$base_path = '';
 
+	if ( $document_root && $install_path && 0 === strpos( $install_path, $document_root ) ) {
+		$base_path = str_replace( '\\', '/', substr( $install_path, strlen( $document_root ) ) );
+	}
+
+	$base_path = '/' . trim( $base_path, '/' );
+	$base_path = '/' === $base_path ? '' : $base_path;
+
+	define( 'WP_HOME', $protocol . $_SERVER['HTTP_HOST'] . $base_path );
+	define( 'WP_SITEURL', WP_HOME );
+}
 
 /* That's all, stop editing! Happy publishing. */
 
