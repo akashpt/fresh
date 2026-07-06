@@ -11,8 +11,22 @@ get_header();
 $items = fresh_cart_items();
 $cart_subtotal = fresh_cart_subtotal();
 $cart_discount = fresh_cart_discount();
-$cart_total = fresh_cart_total();
+$cart_items_total = fresh_cart_total();
+$cart_delivery_charge = fresh_cart_delivery_charge($cart_items_total);
+$cart_total = fresh_cart_payable_total();
 $applied_coupon = fresh_get_applied_coupon_code();
+$posted_name = isset($_POST['customer_name']) ? sanitize_text_field(wp_unslash($_POST['customer_name'])) : '';
+$posted_email = isset($_POST['customer_email']) ? sanitize_email(wp_unslash($_POST['customer_email'])) : '';
+$posted_phone = isset($_POST['customer_phone']) ? sanitize_text_field(wp_unslash($_POST['customer_phone'])) : '';
+$posted_address = isset($_POST['customer_address']) ? sanitize_textarea_field(wp_unslash($_POST['customer_address'])) : '';
+$posted_delivery_time = isset($_POST['customer_delivery_time']) ? sanitize_text_field(wp_unslash($_POST['customer_delivery_time'])) : '';
+$posted_note = isset($_POST['customer_note']) ? sanitize_textarea_field(wp_unslash($_POST['customer_note'])) : '';
+$delivery_options = [
+    'Any time' => __('Any time', 'fresh'),
+    'Morning' => __('Morning', 'fresh'),
+    'Afternoon' => __('Afternoon', 'fresh'),
+    'Evening' => __('Evening', 'fresh'),
+];
 
 fresh_breadcrumb_banner(__('Checkout', 'fresh'), __('Complete your order', 'fresh'));
 ?>
@@ -61,20 +75,36 @@ fresh_breadcrumb_banner(__('Checkout', 'fresh'), __('Complete your order', 'fres
                             </div>
                             <p>
                                 <label><?php esc_html_e('Name', 'fresh'); ?></label>
-                                <input type="text" name="customer_name" required>
+                                <input type="text" name="customer_name" value="<?php echo esc_attr($posted_name); ?>" autocomplete="name" required>
                             </p>
                             <p>
                                 <label><?php esc_html_e('Email', 'fresh'); ?></label>
-                                <input type="email" name="customer_email" required>
+                                <input type="email" name="customer_email" value="<?php echo esc_attr($posted_email); ?>" autocomplete="email" required>
                             </p>
                             <p>
                                 <label><?php esc_html_e('Phone', 'fresh'); ?></label>
-                                <input type="text" name="customer_phone" required>
+                                <input type="text" name="customer_phone" value="<?php echo esc_attr($posted_phone); ?>" autocomplete="tel" required>
                             </p>
                             <p>
                                 <label><?php esc_html_e('Address', 'fresh'); ?></label>
-                                <textarea name="customer_address" rows="5" required></textarea>
+                                <textarea name="customer_address" rows="5" autocomplete="street-address" required><?php echo esc_textarea($posted_address); ?></textarea>
                             </p>
+                            <div class="fresh-checkout-preferences">
+                                <p>
+                                    <label for="customer_delivery_time"><?php esc_html_e('Preferred Delivery Time', 'fresh'); ?></label>
+                                    <select id="customer_delivery_time" name="customer_delivery_time">
+                                        <?php foreach ($delivery_options as $value => $label) : ?>
+                                            <option value="<?php echo esc_attr($value); ?>" <?php selected($posted_delivery_time, $value); ?>>
+                                                <?php echo esc_html($label); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </p>
+                                <p>
+                                    <label><?php esc_html_e('Order Note', 'fresh'); ?></label>
+                                    <textarea name="customer_note" rows="3" placeholder="<?php esc_attr_e('Example: call before delivery, leave at reception, extra packing needed.', 'fresh'); ?>"><?php echo esc_textarea($posted_note); ?></textarea>
+                                </p>
+                            </div>
                             <button type="submit" name="fresh_place_order" value="1" class="theme-btn-1 btn btn-effect-1"><?php esc_html_e('Place Order', 'fresh'); ?></button>
                         </form>
                     </div>
@@ -104,6 +134,10 @@ fresh_breadcrumb_banner(__('Checkout', 'fresh'), __('Complete your order', 'fres
                                         <span>-<?php echo esc_html(fresh_format_price($cart_discount)); ?></span>
                                     </li>
                                 <?php endif; ?>
+                                <li>
+                                    <?php esc_html_e('Delivery', 'fresh'); ?>
+                                    <span><?php echo esc_html($cart_delivery_charge > 0 ? fresh_format_price($cart_delivery_charge) : __('Free', 'fresh')); ?></span>
+                                </li>
                             </ul>
                             <h5><?php esc_html_e('Total:', 'fresh'); ?> <?php echo esc_html(fresh_format_price($cart_total)); ?></h5>
                         </div>

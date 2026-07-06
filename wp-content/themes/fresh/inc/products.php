@@ -91,6 +91,19 @@ function fresh_coupon_settings_menu()
 }
 add_action('admin_menu', 'fresh_coupon_settings_menu');
 
+function fresh_delivery_settings_menu()
+{
+    add_submenu_page(
+        'edit.php?post_type=fresh_order',
+        __('Delivery Settings', 'fresh'),
+        __('Delivery Settings', 'fresh'),
+        'manage_options',
+        'fresh-delivery-settings',
+        'fresh_render_delivery_settings_page'
+    );
+}
+add_action('admin_menu', 'fresh_delivery_settings_menu');
+
 function fresh_filter_order_admin_list($query)
 {
     global $pagenow;
@@ -178,6 +191,60 @@ function fresh_render_whatsapp_settings_page()
 function fresh_whatsapp_number()
 {
     return fresh_sanitize_whatsapp_number(get_option('fresh_whatsapp_number', ''));
+}
+
+function fresh_register_delivery_settings()
+{
+    register_setting('fresh_delivery_settings', 'fresh_delivery_charge_amount', [
+        'type'              => 'number',
+        'sanitize_callback' => 'fresh_sanitize_delivery_setting',
+        'default'           => 50,
+    ]);
+
+    register_setting('fresh_delivery_settings', 'fresh_delivery_free_threshold', [
+        'type'              => 'number',
+        'sanitize_callback' => 'fresh_sanitize_delivery_setting',
+        'default'           => 999,
+    ]);
+}
+add_action('admin_init', 'fresh_register_delivery_settings');
+
+function fresh_sanitize_delivery_setting($amount)
+{
+    return max(0, (float) $amount);
+}
+
+function fresh_render_delivery_settings_page()
+{
+    ?>
+    <div class="wrap">
+        <h1><?php esc_html_e('Delivery Settings', 'fresh'); ?></h1>
+        <form method="post" action="options.php">
+            <?php settings_fields('fresh_delivery_settings'); ?>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row">
+                        <label for="fresh_delivery_charge_amount"><?php esc_html_e('Delivery Charge', 'fresh'); ?></label>
+                    </th>
+                    <td>
+                        <input type="number" step="0.01" min="0" id="fresh_delivery_charge_amount" name="fresh_delivery_charge_amount" value="<?php echo esc_attr(fresh_delivery_charge_amount()); ?>" class="regular-text">
+                        <p class="description"><?php esc_html_e('This amount is added when the cart total is not eligible for free delivery.', 'fresh'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="fresh_delivery_free_threshold"><?php esc_html_e('Free Delivery Above', 'fresh'); ?></label>
+                    </th>
+                    <td>
+                        <input type="number" step="0.01" min="0" id="fresh_delivery_free_threshold" name="fresh_delivery_free_threshold" value="<?php echo esc_attr(fresh_delivery_free_threshold()); ?>" class="regular-text">
+                        <p class="description"><?php esc_html_e('Orders above this cart total get free delivery. Example: 999 means delivery is free from 1000 and above.', 'fresh'); ?></p>
+                    </td>
+                </tr>
+            </table>
+            <?php submit_button(); ?>
+        </form>
+    </div>
+    <?php
 }
 
 function fresh_product_meta_box()
@@ -310,10 +377,12 @@ function fresh_render_order_customer_meta_box($post)
     $customer = fresh_order_customer($post->ID);
     $is_completed = $post->post_status === 'fresh_completed';
     $fields = [
-        __('Name', 'fresh')    => $customer['name'] ?? '',
-        __('Email', 'fresh')   => $customer['email'] ?? '',
-        __('Phone', 'fresh')   => $customer['phone'] ?? '',
-        __('Address', 'fresh') => $customer['address'] ?? '',
+        __('Name', 'fresh')                    => $customer['name'] ?? '',
+        __('Email', 'fresh')                   => $customer['email'] ?? '',
+        __('Phone', 'fresh')                   => $customer['phone'] ?? '',
+        __('Address', 'fresh')                 => $customer['address'] ?? '',
+        __('Preferred Delivery Time', 'fresh') => $customer['delivery_time'] ?? '',
+        __('Order Note', 'fresh')              => $customer['note'] ?? '',
     ];
     ?>
     <div class="fresh-order-customer">
@@ -365,6 +434,7 @@ function fresh_render_order_details_meta_box($post)
     $items    = fresh_order_items($post->ID);
     $subtotal = get_post_meta($post->ID, '_fresh_order_subtotal', true);
     $discount = get_post_meta($post->ID, '_fresh_order_discount', true);
+    $delivery = get_post_meta($post->ID, '_fresh_order_delivery', true);
     $coupon   = get_post_meta($post->ID, '_fresh_order_coupon', true);
     $total    = get_post_meta($post->ID, '_fresh_order_total', true);
 
@@ -435,6 +505,10 @@ function fresh_render_order_details_meta_box($post)
                     <th>-<?php echo esc_html(fresh_format_price($discount)); ?></th>
                 </tr>
             <?php endif; ?>
+            <tr>
+                <th colspan="5" style="text-align: right;"><?php esc_html_e('Delivery', 'fresh'); ?></th>
+                <th><?php echo esc_html((float) $delivery > 0 ? fresh_format_price($delivery) : __('Free', 'fresh')); ?></th>
+            </tr>
             <tr>
                 <th colspan="5" style="text-align: right;"><?php esc_html_e('Order Total', 'fresh'); ?></th>
                 <th><?php echo esc_html(fresh_format_price($total)); ?></th>
@@ -1003,6 +1077,38 @@ function fresh_cart_total()
     return max(0, fresh_cart_subtotal() - fresh_cart_discount());
 }
 
+function fresh_delivery_free_threshold()
+{
+    $threshold = get_option('fresh_delivery_free_threshold', 999);
+
+    return max(0, (float) apply_filters('fresh_delivery_free_threshold', $threshold));
+}
+
+function fresh_delivery_charge_amount()
+{
+    $charge = get_option('fresh_delivery_charge_amount', 50);
+
+    return max(0, (float) apply_filters('fresh_delivery_charge_amount', $charge));
+}
+
+function fresh_cart_delivery_charge($cart_total = null)
+{
+    $cart_total = $cart_total === null ? fresh_cart_total() : (float) $cart_total;
+
+    if ($cart_total <= 0 || $cart_total > fresh_delivery_free_threshold()) {
+        return 0;
+    }
+
+    return fresh_delivery_charge_amount();
+}
+
+function fresh_cart_payable_total()
+{
+    $cart_total = fresh_cart_total();
+
+    return $cart_total + fresh_cart_delivery_charge($cart_total);
+}
+
 function fresh_cart_count()
 {
     return array_sum(fresh_get_cart());
@@ -1356,6 +1462,8 @@ function fresh_handle_checkout()
     $email   = isset($_POST['customer_email']) ? sanitize_email(wp_unslash($_POST['customer_email'])) : '';
     $phone   = isset($_POST['customer_phone']) ? sanitize_text_field(wp_unslash($_POST['customer_phone'])) : '';
     $address = isset($_POST['customer_address']) ? sanitize_textarea_field(wp_unslash($_POST['customer_address'])) : '';
+    $delivery_time = isset($_POST['customer_delivery_time']) ? sanitize_text_field(wp_unslash($_POST['customer_delivery_time'])) : '';
+    $note = isset($_POST['customer_note']) ? sanitize_textarea_field(wp_unslash($_POST['customer_note'])) : '';
 
     if ($name === '' || $email === '' || $phone === '' || $address === '') {
         return new WP_Error('missing_fields', __('Please fill all checkout fields.', 'fresh'));
@@ -1376,12 +1484,15 @@ function fresh_handle_checkout()
         'email'   => $email,
         'phone'   => $phone,
         'address' => $address,
+        'delivery_time' => $delivery_time ?: __('Any time', 'fresh'),
+        'note' => $note,
     ]);
     update_post_meta($order_id, '_fresh_order_items', $items);
     update_post_meta($order_id, '_fresh_order_subtotal', fresh_cart_subtotal());
     update_post_meta($order_id, '_fresh_order_discount', fresh_cart_discount());
+    update_post_meta($order_id, '_fresh_order_delivery', fresh_cart_delivery_charge());
     update_post_meta($order_id, '_fresh_order_coupon', fresh_get_applied_coupon_code());
-    update_post_meta($order_id, '_fresh_order_total', fresh_cart_total());
+    update_post_meta($order_id, '_fresh_order_total', fresh_cart_payable_total());
 
     fresh_set_cart([]);
     fresh_set_applied_coupon_code('');
@@ -1395,6 +1506,7 @@ function fresh_order_whatsapp_message($order_id)
     $items    = get_post_meta($order_id, '_fresh_order_items', true);
     $subtotal = get_post_meta($order_id, '_fresh_order_subtotal', true);
     $discount = get_post_meta($order_id, '_fresh_order_discount', true);
+    $delivery = get_post_meta($order_id, '_fresh_order_delivery', true);
     $coupon   = get_post_meta($order_id, '_fresh_order_coupon', true);
     $total    = get_post_meta($order_id, '_fresh_order_total', true);
 
@@ -1414,9 +1526,16 @@ function fresh_order_whatsapp_message($order_id)
         __('Email: ', 'fresh') . ($customer['email'] ?? ''),
         __('Phone: ', 'fresh') . ($customer['phone'] ?? ''),
         __('Address: ', 'fresh') . ($customer['address'] ?? ''),
-        '',
-        __('Cart Details', 'fresh'),
     ];
+
+    $lines[] = __('Preferred Delivery Time: ', 'fresh') . ($customer['delivery_time'] ?? __('Any time', 'fresh'));
+
+    if (! empty($customer['note'])) {
+        $lines[] = __('Order Note: ', 'fresh') . $customer['note'];
+    }
+
+    $lines[] = '';
+    $lines[] = __('Cart Details', 'fresh');
 
     foreach ($items as $item) {
         if (empty($item['product']) || ! $item['product'] instanceof WP_Post) {
@@ -1441,22 +1560,10 @@ function fresh_order_whatsapp_message($order_id)
         $lines[] = __('Discount: ', 'fresh') . '-' . fresh_format_price($discount) . $coupon_text;
     }
 
+    $lines[] = __('Delivery: ', 'fresh') . ((float) $delivery > 0 ? fresh_format_price($delivery) : __('Free', 'fresh'));
     $lines[] = __('Total: ', 'fresh') . fresh_format_price($total);
 
-    $image_url = fresh_order_whatsapp_image_url();
-    if ($image_url) {
-        $lines[] = '';
-        $lines[] = __('Order Image: ', 'fresh') . $image_url;
-    }
-
     return implode("\n", $lines);
-}
-
-function fresh_order_whatsapp_image_url()
-{
-    $image_url = get_template_directory_uri() . '/assets/img/logo.png';
-
-    return esc_url_raw(apply_filters('fresh_order_whatsapp_image_url', $image_url));
 }
 
 function fresh_order_whatsapp_url($order_id)

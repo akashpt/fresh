@@ -9,7 +9,9 @@ get_header();
 $items = fresh_cart_items();
 $cart_subtotal = fresh_cart_subtotal();
 $cart_discount = fresh_cart_discount();
-$cart_total = fresh_cart_total();
+$cart_items_total = fresh_cart_total();
+$cart_delivery_charge = fresh_cart_delivery_charge($cart_items_total);
+$cart_total = fresh_cart_payable_total();
 $cart_count = fresh_cart_count();
 $applied_coupon = fresh_get_applied_coupon_code();
 $applied_coupon_data = $applied_coupon ? fresh_find_coupon($applied_coupon) : null;
@@ -41,14 +43,14 @@ fresh_breadcrumb_banner(__('Cart', 'fresh'), __('Shopping cart', 'fresh'));
                     <div class="alert alert-success"><?php esc_html_e('Coupon applied successfully.', 'fresh'); ?></div>
                 <?php endif; ?>
 
-                <form method="post" class="fresh-cart-form" data-coupon-type="<?php echo esc_attr($applied_coupon_data['type'] ?? ''); ?>" data-coupon-amount="<?php echo esc_attr($applied_coupon_data['amount'] ?? 0); ?>">
+                <form method="post" class="fresh-cart-form" data-coupon-type="<?php echo esc_attr($applied_coupon_data['type'] ?? ''); ?>" data-coupon-amount="<?php echo esc_attr($applied_coupon_data['amount'] ?? 0); ?>" data-delivery-threshold="<?php echo esc_attr(fresh_delivery_free_threshold()); ?>" data-delivery-charge="<?php echo esc_attr(fresh_delivery_charge_amount()); ?>">
                     <?php wp_nonce_field('fresh_update_cart'); ?>
 
                     <div class="fresh-cart-layout">
                         <div class="fresh-cart-items-panel">
                             <div class="fresh-cart-shipping-note">
                                 <i class="fas fa-truck"></i>
-                                <?php esc_html_e('Free shipping on all orders.', 'fresh'); ?>
+                                <?php echo esc_html(sprintf(__('Free delivery above %s.', 'fresh'), fresh_format_price(fresh_delivery_free_threshold()))); ?>
                             </div>
 
                             <div class="fresh-cart-items-head">
@@ -137,7 +139,9 @@ fresh_breadcrumb_banner(__('Cart', 'fresh'), __('Shopping cart', 'fresh'));
                                 </div>
                                 <div>
                                     <span><?php esc_html_e('Delivery Charges', 'fresh'); ?></span>
-                                    <strong class="fresh-summary-success"><?php esc_html_e('Free', 'fresh'); ?></strong>
+                                    <strong class="fresh-summary-success fresh-cart-delivery">
+                                        <?php echo esc_html($cart_delivery_charge > 0 ? fresh_format_price($cart_delivery_charge) : __('Free', 'fresh')); ?>
+                                    </strong>
                                 </div>
                             </div>
 

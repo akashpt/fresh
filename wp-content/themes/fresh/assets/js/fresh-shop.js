@@ -136,6 +136,18 @@
         return Math.min(subtotal, amount);
     }
 
+    function cartDeliveryCharge(total, threshold, amount) {
+        total = Number(total || 0);
+        threshold = Number(threshold || 0);
+        amount = Number(amount || 0);
+
+        if (total <= 0 || total > threshold) {
+            return 0;
+        }
+
+        return amount;
+    }
+
     function refreshCartTotals() {
         var $form = $('.fresh-cart-form');
         var subtotal = 0;
@@ -166,12 +178,15 @@
 
         var couponDiscount = cartDiscount(subtotal, $form.data('coupon-type'), $form.data('coupon-amount'));
         var totalDiscount = productDiscount + couponDiscount;
-        var total = Math.max(0, subtotal - couponDiscount);
+        var itemsTotal = Math.max(0, subtotal - couponDiscount);
+        var deliveryCharge = cartDeliveryCharge(itemsTotal, $form.data('delivery-threshold'), $form.data('delivery-charge'));
+        var total = itemsTotal + deliveryCharge;
 
         $('.fresh-cart-subtotal').text(formatPrice(subtotal));
         $('.fresh-cart-product-discount').text(productDiscount > 0 ? '-' + formatPrice(productDiscount) : formatPrice(0));
         $('.fresh-cart-coupon-discount').text(couponDiscount > 0 ? '-' + formatPrice(couponDiscount) : formatPrice(0));
         $('.fresh-cart-discount').text(totalDiscount > 0 ? '-' + formatPrice(totalDiscount) : formatPrice(0));
+        $('.fresh-cart-delivery').text(deliveryCharge > 0 ? formatPrice(deliveryCharge) : 'Free');
         $('.fresh-cart-total').text(formatPrice(total));
         $('.fresh-cart-count').text(count);
     }
