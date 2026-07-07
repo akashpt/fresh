@@ -45,6 +45,17 @@ $categories = get_terms([
     'taxonomy'   => 'fresh_product_category',
     'hide_empty' => true,
 ]);
+$product_counts = wp_count_posts('fresh_product');
+$all_products_count = isset($product_counts->publish) ? (int) $product_counts->publish : 0;
+$selected_category_label = __('All Products', 'fresh');
+if ($selected_category && ! is_wp_error($categories)) {
+    foreach ($categories as $category) {
+        if ($selected_category === $category->slug) {
+            $selected_category_label = $category->name;
+            break;
+        }
+    }
+}
 $sort_options = [
     'latest'     => __('Newest First', 'fresh'),
     'price-low'  => __('Price: Low to High', 'fresh'),
@@ -82,11 +93,21 @@ $sort_options = [
                         <?php endif; ?>
                     </div>
 
-                    <div class="fresh-shop-option-group">
-                        <h3><?php esc_html_e('Categories', 'fresh'); ?></h3>
+                    <details class="fresh-shop-category-panel">
+                        <summary>
+                            <span>
+                                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                                <?php esc_html_e('Categories', 'fresh'); ?>
+                            </span>
+                            <small>
+                                <?php echo esc_html($selected_category_label); ?>
+                                <em><?php esc_html_e('Tap to choose', 'fresh'); ?></em>
+                            </small>
+                        </summary>
                         <div class="fresh-shop-category-list">
                             <a class="<?php echo $selected_category ? '' : 'is-active'; ?>" href="<?php echo esc_url(add_query_arg('sort', $selected_sort, $shop_url)); ?>">
                                 <span><?php esc_html_e('All Products', 'fresh'); ?></span>
+                                <small><?php echo esc_html($all_products_count); ?></small>
                             </a>
                             <?php if (! is_wp_error($categories)) : ?>
                                 <?php foreach ($categories as $category) : ?>
@@ -103,7 +124,7 @@ $sort_options = [
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </div>
-                    </div>
+                    </details>
 
                     <form class="fresh-shop-sort-form" action="<?php echo esc_url($shop_url); ?>" method="get">
                         <?php if ($selected_category) : ?>
