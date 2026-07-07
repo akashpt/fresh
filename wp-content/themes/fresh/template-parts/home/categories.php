@@ -9,7 +9,7 @@ $terms = get_terms([
 $icons = ['category-1.png', 'category-2.png', 'category-3.png', 'category-4.png', 'category-5.png'];
 ?>
 
-<div class="ltn__category-area section-bg-1-- ltn__primary-bg before-bg-1 bg-image bg-overlay-theme-black-5--0 pt-115 pb-90" data-bg="<?php echo esc_url(get_template_directory_uri() . '/assets/img/bg/5.jpg'); ?>">
+<div class="ltn__category-area section-bg-1-- ltn__primary-bg before-bg-1 bg-image bg-overlay-theme-black-5--0 pt-115 pb-90 d-none" data-bg="<?php echo esc_url(get_template_directory_uri() . '/assets/img/bg/5.jpg'); ?>">
     <div class="container">
         <div class="row">
             <div class="col-lg-12">

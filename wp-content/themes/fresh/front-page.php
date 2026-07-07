@@ -13,7 +13,12 @@ get_header();
 <?php get_template_part('template-parts/home/features', null, ['variant' => 'top']); ?>
 
 <?php get_template_part('template-parts/home/categories'); ?>
-
+<?php
+get_template_part('template-parts/products/product-tabs', null, [
+    'title' => __('Our Products', 'fresh'),
+    'limit' => 8,
+]);
+?>
 <?php
 get_template_part('template-parts/products/product-grid', null, [
     'title'        => __('Featured Products', 'fresh'),
@@ -21,13 +26,8 @@ get_template_part('template-parts/products/product-grid', null, [
     'show_counter' => true,
 ]);
 ?>
-<?php get_template_part('template-parts/home/counter'); ?>
-<?php
-get_template_part('template-parts/products/product-tabs', null, [
-    'title' => __('Our Products', 'fresh'),
-    'limit' => 8,
-]);
-?>
+<?php //get_template_part('template-parts/home/counter'); ?>
+
 
 <?php get_template_part('template-parts/home/cta'); ?>
 

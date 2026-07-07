@@ -23,7 +23,7 @@ $steps = [
         <div class="fresh-order-flow-inner">
             <div class="fresh-order-flow-heading">
                 <span><?php esc_html_e('Easy ordering', 'fresh'); ?></span>
-                <h2><?php esc_html_e('Order fresh products in 3 simple steps', 'fresh'); ?></h2>
+                <h2><?php esc_html_e('Order purchase in 3 simple steps', 'fresh'); ?></h2>
             </div>
             <div class="fresh-order-steps">
                 <?php foreach ($steps as $index => $step) : ?>

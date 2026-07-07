@@ -64,7 +64,7 @@ $sort_options = [
 ];
 ?>
 
-<section class="ltn__product-area ltn__product-gutter fresh-product-section fresh-product-section-featured <?php echo $show_filters ? 'fresh-shop-page' : ''; ?>  pb-70">
+<section class="ltn__product-area ltn__product-gutter fresh-product-section fresh-product-section-featured <?php echo $show_filters ? 'fresh-shop-page' : ''; ?> pt-50 pb-70">
     <div class="container">
         <?php if (isset($_GET['fresh_added'])) : ?>
             <div class="alert alert-success fresh-cart-added">
@@ -99,10 +99,7 @@ $sort_options = [
                                 <i class="fas fa-layer-group" aria-hidden="true"></i>
                                 <?php esc_html_e('Categories', 'fresh'); ?>
                             </span>
-                            <small>
-                                <?php echo esc_html($selected_category_label); ?>
-                                <em><?php esc_html_e('Tap to choose', 'fresh'); ?></em>
-                            </small>
+                           
                         </summary>
                         <div class="fresh-shop-category-list">
                             <a class="<?php echo $selected_category ? '' : 'is-active'; ?>" href="<?php echo esc_url(add_query_arg('sort', $selected_sort, $shop_url)); ?>">

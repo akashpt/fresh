@@ -11,6 +11,9 @@ $sale_price = get_post_meta($product->ID, '_fresh_product_sale_price', true);
 $regular    = get_post_meta($product->ID, '_fresh_product_price', true);
 $detail_url = fresh_product_detail_url($product->ID);
 $column_class = isset($args['column_class']) ? $args['column_class'] : 'col-lg-3 col-md-4 col-sm-6 col-6';
+$title_length = isset($args['title_length']) ? absint($args['title_length']) : 35;
+$product_title = get_the_title($product);
+$display_title = fresh_trim_product_title($product, $title_length);
 $product_number = isset($args['product_number']) ? absint($args['product_number']) : 0;
 $cart = fresh_get_cart();
 $cart_quantity = isset($cart[$product->ID]) ? absint($cart[$product->ID]) : 0;
@@ -22,7 +25,7 @@ $card_quantity = $cart_quantity > 0 ? $cart_quantity : 1;
         <div class="product-img">
              
             <a href="<?php echo esc_url($detail_url); ?>">
-                <img src="<?php echo esc_url(fresh_product_image_url($product->ID)); ?>" alt="<?php echo esc_attr(get_the_title($product)); ?>">
+                <img src="<?php echo esc_url(fresh_product_image_url($product->ID)); ?>" alt="<?php echo esc_attr($product_title); ?>">
             </a>
             <div class="product-badge">
                 <ul>
@@ -46,8 +49,8 @@ $card_quantity = $cart_quantity > 0 ? $cart_quantity : 1;
                         </ul>
                     </div>
                     <h2 class="product-title">
-                        <a href="<?php echo esc_url($detail_url); ?>">
-                            <?php echo esc_html(get_the_title($product)); ?>
+                        <a href="<?php echo esc_url($detail_url); ?>" title="<?php echo esc_attr($product_title); ?>">
+                            <?php echo esc_html($display_title); ?>
                         </a>
                     </h2>
                 </div>

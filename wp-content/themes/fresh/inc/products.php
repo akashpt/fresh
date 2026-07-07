@@ -796,6 +796,14 @@ function fresh_format_price($price)
     return '₹' . number_format((float) $price, 2);
 }
 
+function fresh_trim_product_title($product, $length = 35)
+{
+    $title = get_the_title($product);
+    $length = max(1, absint($length));
+
+    return wp_html_excerpt($title, $length, '&hellip;');
+}
+
 function fresh_product_detail_url($product_id)
 {
     return add_query_arg('product', absint($product_id), fresh_page_url('product-details'));

@@ -6550,10 +6550,10 @@ ul.wp-block-latest-posts.is-grid.alignwide {
 ---------------------------------------------------- */
 .ltn__product-item {
   position: relative;
-  margin-bottom: 50px; }
+  margin-bottom: 25px; }
 
 .ltn__product-item-3 {
-  height: calc(100% - 50px);
+  /*height: calc(100% - 50px);*/
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;

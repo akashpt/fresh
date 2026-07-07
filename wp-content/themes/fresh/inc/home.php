@@ -7,11 +7,11 @@ function fresh_home_default($key)
 {
     $defaults = [
         'hero_1_subtitle' => '100% genuine Products',
-        'hero_1_title'    => "Our Garden's Most Favorite Food",
+        'hero_1_title'    => "Farm Fresh, Naturally Pure",
         'hero_1_text'     => 'Fresh organic products for your daily needs.',
         'hero_1_image'    => get_template_directory_uri() . '/assets/img/slider/21.png',
         'hero_2_subtitle' => 'Fresh & organic',
-        'hero_2_title'    => 'Tasty & Healthy Organic Food',
+        'hero_2_title'    => 'Tasty & Healthy Organic  ',
         'hero_2_text'     => 'Choose quality food from trusted local products.',
         'hero_2_image'    => get_template_directory_uri() . '/assets/img/slider/21.png',
         'about_subtitle'  => 'Know More About Shop',

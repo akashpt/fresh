@@ -84,6 +84,7 @@ if (! is_wp_error($terms)) {
                                             get_template_part('template-parts/products/product-card', null, [
                                                 'product'      => get_post(),
                                                 'column_class' => 'col-lg-12',
+                                                'title_length' => 30,
                                             ]);
                                         endwhile;
                                         wp_reset_postdata();
