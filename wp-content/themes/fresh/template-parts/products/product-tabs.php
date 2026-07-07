@@ -59,7 +59,7 @@ if (! is_wp_error($terms)) {
                         $query_args = [
                             'post_type'      => 'fresh_product',
                             'post_status'    => 'publish',
-                            'posts_per_page' => $limit,
+                            'posts_per_page' => $tab['term'] ? $limit : -1,
                         ];
 
                         if ($tab['term']) {
