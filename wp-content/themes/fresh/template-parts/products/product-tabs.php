@@ -28,7 +28,7 @@ if (! is_wp_error($terms)) {
 }
 ?>
 
-<div class="ltn__product-tab-area ltn__product-gutter fresh-product-section fresh-product-section-tabs pt-115 pb-70">
+<div class="ltn__product-tab-area ltn__product-gutter fresh-product-section fresh-product-section-tabs pt-115 pb-0">
     <div class="container">
         <?php if (isset($_GET['fresh_added'])) : ?>
             <div class="alert alert-success fresh-cart-added">
