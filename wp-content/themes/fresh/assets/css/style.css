@@ -6535,7 +6535,10 @@ ul.wp-block-latest-posts.is-grid.alignwide {
     .ltn__slide-item-2 .slide-brief {
       padding-left: 15px; }
   .ltn__slide-item-3-normal {
-    padding-top: 100px; }
+    padding-top: 50px;  padding-bottom: 50px; }
+    .ltn__product-item {
+    position: relative;
+    margin-bottom: 0px;}
   .ltn__product-pointer {
     display: none; }
   .ltn__slide-item-6 .slide-title {
