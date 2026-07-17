@@ -16,6 +16,7 @@ $cart_count = fresh_cart_count();
 $applied_coupon = fresh_get_applied_coupon_code();
 $applied_coupon_data = $applied_coupon ? fresh_find_coupon($applied_coupon) : null;
 $cart_product_discount = 0;
+$related_products = $items ? fresh_cart_related_products(4) : [];
 
 foreach ($items as $item) {
     $product_id = $item['product']->ID;
@@ -171,6 +172,25 @@ fresh_breadcrumb_banner(__('Cart', 'fresh'), __('Shopping cart', 'fresh'));
                         </aside>
                     </div>
                 </form>
+                <?php if ($related_products) : ?>
+                    <section class="fresh-cart-related-products">
+                        <div class="fresh-cart-related-head">
+                            <span><?php esc_html_e('Recommended for you', 'fresh'); ?></span>
+                            <h2><?php esc_html_e('Related Products', 'fresh'); ?></h2>
+                        </div>
+                        <div class="row fresh-cart-related-grid">
+                            <?php foreach ($related_products as $related_product) : ?>
+                                <?php
+                                get_template_part('template-parts/products/product-card', null, [
+                                    'product'      => $related_product,
+                                    'column_class' => 'col-lg-3 col-md-4 col-sm-6 col-6',
+                                    'title_length' => 32,
+                                ]);
+                                ?>
+                            <?php endforeach; ?>
+                        </div>
+                    </section>
+                <?php endif; ?>
             <?php else : ?>
                 <div class="text-center pt-60 pb-60">
                     <h2><?php esc_html_e('Your cart is empty.', 'fresh'); ?></h2>

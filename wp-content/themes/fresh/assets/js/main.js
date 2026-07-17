@@ -173,6 +173,8 @@
                 var $this = $(this),
                     $target = $this.attr('href');
                 $body.addClass('ltn__utilize-open');
+                $ltn__utilize.removeClass('ltn__utilize-open');
+                $mobileMenuToggle.find('a').removeClass('close');
                 $($target).addClass('ltn__utilize-open');
                 $ltn__utilizeOverlay.fadeIn();
                 if ($this.parent().hasClass('mobile-menu-toggle')) {

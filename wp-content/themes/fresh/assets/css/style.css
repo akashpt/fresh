@@ -13098,8 +13098,7 @@ input.cart-plus-minus-box {
 
 .btn-effect-2:hover {
   color: var(--ltn__heading-color); }
-  .btn-effect-2:hover::after {
-    width: 100%; }
+ 
 
 .btn-effect-3:after {
   width: 0%;

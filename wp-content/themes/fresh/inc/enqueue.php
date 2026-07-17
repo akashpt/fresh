@@ -9,6 +9,7 @@ function fresh_theme_enqueue_assets()
     $theme_dir = get_template_directory();
     $custom_css_version = file_exists($theme_dir . '/assets/css/custom.css') ? filemtime($theme_dir . '/assets/css/custom.css') : FRESH_THEME_VERSION;
     $main_js_version = file_exists($theme_dir . '/assets/js/main.js') ? filemtime($theme_dir . '/assets/js/main.js') : FRESH_THEME_VERSION;
+    $fresh_shop_js_version = file_exists($theme_dir . '/assets/js/fresh-shop.js') ? filemtime($theme_dir . '/assets/js/fresh-shop.js') : FRESH_THEME_VERSION;
     $performance_js_version = file_exists($theme_dir . '/assets/js/performance.js') ? filemtime($theme_dir . '/assets/js/performance.js') : FRESH_THEME_VERSION;
 
     wp_enqueue_style('fresh-font-icons', $theme_uri . '/assets/css/font-icons.css', [], FRESH_THEME_VERSION);
@@ -21,7 +22,7 @@ function fresh_theme_enqueue_assets()
     wp_enqueue_script('fresh-plugins', $theme_uri . '/assets/js/plugins.js', ['jquery'], FRESH_THEME_VERSION, true);
     wp_enqueue_script('fresh-performance', $theme_uri . '/assets/js/performance.js', ['fresh-plugins'], $performance_js_version, true);
     wp_enqueue_script('fresh-main', $theme_uri . '/assets/js/main.js', ['fresh-performance'], $main_js_version, true);
-    wp_enqueue_script('fresh-shop', $theme_uri . '/assets/js/fresh-shop.js', ['jquery'], FRESH_THEME_VERSION, true);
+    wp_enqueue_script('fresh-shop', $theme_uri . '/assets/js/fresh-shop.js', ['jquery'], $fresh_shop_js_version, true);
     wp_localize_script('fresh-shop', 'freshShop', [
         'ajaxUrl'       => admin_url('admin-ajax.php'),
         'nonce'         => wp_create_nonce('fresh_storefront'),
@@ -29,6 +30,8 @@ function fresh_theme_enqueue_assets()
         'addedWishlist' => __('Product added to wishlist.', 'fresh'),
         'errorMessage'  => __('Something went wrong. Please try again.', 'fresh'),
         'shopUrl'       => fresh_page_url('shop'),
+        'cartUrl'       => fresh_page_url('cart'),
+        'checkoutUrl'   => fresh_page_url('checkout'),
     ]);
 
     if (is_singular() && comments_open() && get_option('thread_comments')) {

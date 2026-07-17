@@ -24,6 +24,85 @@
         }, 10);
     }
 
+    function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (character) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[character];
+        });
+    }
+
+    function refreshMiniCart(cart) {
+        var html = '';
+
+        if (!cart || typeof cart !== 'object') {
+            return;
+        }
+
+        html += '<div class="mini-cart-product-area ltn__scrollbar">';
+        if (cart.items && cart.items.length) {
+            $.each(cart.items, function (_, item) {
+                html += '' +
+                    '<div class="mini-cart-item clearfix">' +
+                        '<div class="mini-cart-img">' +
+                            '<a href="' + escapeHtml(item.url) + '">' +
+                                '<img src="' + escapeHtml(item.image) + '" alt="' + escapeHtml(item.title) + '" width="80" height="80" loading="lazy" decoding="async">' +
+                            '</a>' +
+                            '<button class="mini-cart-item-delete fresh-mini-cart-remove" type="button" data-product-id="' + escapeHtml(item.id) + '" aria-label="Remove item">' +
+                                '<i class="icon-cancel" aria-hidden="true"></i>' +
+                            '</button>' +
+                        '</div>' +
+                        '<div class="mini-cart-info">' +
+                            '<h6><a href="' + escapeHtml(item.url) + '">' + escapeHtml(item.title) + '</a></h6>' +
+                            '<span class="mini-cart-quantity">' + escapeHtml(item.quantity) + ' x ' + escapeHtml(item.price) + '</span>' +
+                        '</div>' +
+                    '</div>';
+            });
+        } else {
+            html += '<p class="fresh-mini-cart-empty">Your cart is empty.</p>';
+        }
+        html += '</div>';
+
+        if (cart.related && cart.related.length) {
+            html += '<div class="fresh-mini-cart-related">';
+            html += '<h5>You may also like</h5>';
+            html += '<div class="fresh-mini-cart-related-list">';
+            $.each(cart.related, function (_, item) {
+                html += '' +
+                    '<div class="fresh-mini-cart-related-item">' +
+                        '<a class="fresh-mini-cart-related-img" href="' + escapeHtml(item.url) + '">' +
+                            '<img src="' + escapeHtml(item.image) + '" alt="' + escapeHtml(item.title) + '" width="80" height="80" loading="lazy" decoding="async">' +
+                        '</a>' +
+                        '<div class="fresh-mini-cart-related-info">' +
+                            '<a href="' + escapeHtml(item.url) + '">' + escapeHtml(item.title) + '</a>' +
+                            '<span>' + escapeHtml(item.price) + '</span>' +
+                        '</div>' +
+                        '<a class="fresh-mini-cart-related-add fresh-add-to-cart" href="' + escapeHtml(item.addUrl || '#') + '" data-product-id="' + escapeHtml(item.id) + '" aria-label="Add ' + escapeHtml(item.title) + ' to cart">' +
+                            '<i class="fas fa-plus" aria-hidden="true"></i>' +
+                        '</a>' +
+                    '</div>';
+            });
+            html += '</div></div>';
+        }
+
+        html += '' +
+            '<div class="mini-cart-footer">' +
+                '<div class="mini-cart-sub-total">' +
+                    '<h5>Subtotal: <span>' + escapeHtml(cart.total) + '</span></h5>' +
+                '</div>' +
+                '<div class="btn-wrapper">' +
+                    '<a href="' + escapeHtml((window.freshShop && freshShop.cartUrl) || '/cart/') + '" class="theme-btn-1 btn btn-effect-1">View Cart</a>' +
+                    '<a href="' + escapeHtml((window.freshShop && freshShop.checkoutUrl) || '/checkout/') + '" class="theme-btn-2 btn btn-effect-2">Checkout</a>' +
+                '</div>' +
+            '</div>';
+
+        $('.fresh-mini-cart-content').html(html);
+    }
+
     function emptyState(title, buttonText, buttonUrl) {
         return '' +
             '<div class="fresh-empty-state text-center pt-60 pb-60">' +
@@ -37,10 +116,13 @@
     function followFallback($trigger, quantity) {
         var href = $trigger.attr('href');
         var minimum = $trigger.data('cart-mode') === 'set' ? 0 : 1;
+        var normalizedQuantity = Math.max(minimum, parseInt(quantity, 10) || minimum);
 
         if (href && href !== '#') {
-            if (quantity) {
-                href = href.replace(/([?&]quantity=)[^&]*/, '$1' + Math.max(minimum, parseInt(quantity, 10) || minimum));
+            if (quantity && href.indexOf('quantity=') !== -1) {
+                href = href.replace(/([?&]quantity=)[^&]*/, '$1' + normalizedQuantity);
+            } else if (quantity) {
+                href += (href.indexOf('?') === -1 ? '?' : '&') + 'quantity=' + normalizedQuantity;
             }
 
             window.location.href = href;
@@ -87,6 +169,8 @@
                 pulseCount('.fresh-cart-count');
             }
 
+            refreshMiniCart(response.data.miniCart);
+
             if (typeof response.data.wishlistCount !== 'undefined') {
                 $('.fresh-wishlist-count').text(response.data.wishlistCount);
                 pulseCount('.fresh-wishlist-count');
@@ -111,7 +195,6 @@
                 showNotice(response.data.message || successMessage);
             }
         }).fail(function () {
-            showNotice(freshShop.errorMessage);
             followFallback($trigger, quantity);
         }).always(function () {
             $trigger.removeClass('is-loading').removeAttr('aria-busy');
@@ -278,6 +361,7 @@
                 pulseCount('.fresh-cart-count');
             }
 
+            refreshMiniCart(response.data.miniCart);
             refreshCartTotals();
             showNotice(response.data.message || 'Product removed from cart.');
 
@@ -287,6 +371,44 @@
         }).fail(function () {
             showNotice(freshShop.errorMessage);
             followFallback($trigger);
+        }).always(function () {
+            $trigger.removeClass('is-loading').removeAttr('aria-busy');
+        });
+    });
+
+    $(document).on('click', '.fresh-mini-cart-remove', function (event) {
+        var $trigger = $(this);
+        var productId = $trigger.data('product-id');
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!productId || !window.freshShop) {
+            showNotice(window.freshShop ? freshShop.errorMessage : 'Please refresh and try again.');
+            return;
+        }
+
+        $trigger.addClass('is-loading').attr('aria-busy', 'true');
+
+        $.post(freshShop.ajaxUrl, {
+            action: 'fresh_remove_from_cart',
+            nonce: freshShop.nonce,
+            product_id: productId
+        }).done(function (response) {
+            if (!response || !response.success) {
+                showNotice((response && response.data && response.data.message) || freshShop.errorMessage);
+                return;
+            }
+
+            if (typeof response.data.cartCount !== 'undefined') {
+                $('.fresh-cart-count').text(response.data.cartCount);
+                pulseCount('.fresh-cart-count');
+            }
+
+            refreshMiniCart(response.data.miniCart);
+            showNotice(response.data.message || 'Product removed from cart.');
+        }).fail(function () {
+            showNotice(freshShop.errorMessage);
         }).always(function () {
             $trigger.removeClass('is-loading').removeAttr('aria-busy');
         });

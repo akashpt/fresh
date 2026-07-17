@@ -19,6 +19,22 @@
 
 
     <div class="body-wrapper">
+    <?php
+    $fresh_marquee_messages = apply_filters('fresh_header_marquee_messages', [
+        __('Fresh daily essentials delivered with care', 'fresh'),
+        __('Free shipping on eligible orders', 'fresh'),
+        __('Secure checkout and quick WhatsApp ordering', 'fresh'),
+    ]);
+    ?>
+    <?php if (! empty($fresh_marquee_messages)) : ?>
+        <div class="fresh-top-marquee" aria-label="<?php esc_attr_e('Store updates', 'fresh'); ?>">
+            <marquee behavior="scroll" direction="left" scrollamount="5">
+                <?php foreach ($fresh_marquee_messages as $fresh_marquee_message) : ?>
+                    <span class="fresh-top-marquee-item"><?php echo esc_html($fresh_marquee_message); ?></span>
+                <?php endforeach; ?>
+            </marquee>
+        </div>
+    <?php endif; ?>
     <!-- HEADER AREA START (header-5) -->
     <header class="ltn__header-area ltn__header-5 ltn__header-transparent-- gradient-color-4---">
  
@@ -52,7 +68,7 @@
                     </div>
                     <div class="ltn__header-options ltn__header-options-2 mb-sm-20">
                         <div class="header-cart-icon">
-                            <a href="<?php echo esc_url(fresh_page_url('cart')); ?>" title="<?php esc_attr_e('Cart', 'fresh'); ?>" aria-label="<?php esc_attr_e('Cart', 'fresh'); ?>">
+                            <a href="#ltn__utilize-cart-menu" class="ltn__utilize-toggle" title="<?php esc_attr_e('Cart', 'fresh'); ?>" aria-label="<?php esc_attr_e('Open cart sidebar', 'fresh'); ?>">
                                 <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                                 <sup class="fresh-cart-count"><?php echo esc_html(fresh_cart_count()); ?></sup>
                             </a>
@@ -82,9 +98,9 @@
     </header>
 
     <div class="fresh-mobile-store-bar" aria-label="<?php esc_attr_e('Store shortcuts', 'fresh'); ?>">
-        <a href="<?php echo esc_url(fresh_page_url('cart')); ?>" class="fresh-mobile-store-link fresh-mobile-store-cart">
+        <a href="#ltn__utilize-cart-menu" class="fresh-mobile-store-link fresh-mobile-store-cart ltn__utilize-toggle" aria-label="<?php esc_attr_e('Open cart sidebar', 'fresh'); ?>">
             <span class="fresh-mobile-store-icon">
-                <i class="fas fa-shopping-cart"></i>
+                <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                 <span class="fresh-mobile-store-count fresh-cart-count"><?php echo esc_html(fresh_cart_count()); ?></span>
             </span>
             <span><?php esc_html_e('Cart', 'fresh'); ?></span>

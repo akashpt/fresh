@@ -436,7 +436,6 @@ function fresh_render_order_customer_meta_box($post)
         __('Email', 'fresh')                   => $customer['email'] ?? '',
         __('Phone', 'fresh')                   => $customer['phone'] ?? '',
         __('Address', 'fresh')                 => $customer['address'] ?? '',
-        __('Preferred Delivery Time', 'fresh') => $customer['delivery_time'] ?? '',
         __('Order Note', 'fresh')              => $customer['note'] ?? '',
     ];
     ?>
@@ -888,6 +887,181 @@ function fresh_product_image_url($product_id, $size = 'medium')
     }
 
     return $image_url;
+}
+
+function fresh_mini_cart_html()
+{
+    $cart_items = fresh_cart_items();
+    $cart_total = fresh_cart_total();
+    $related_products = fresh_cart_related_products(4);
+
+    ob_start();
+    ?>
+    <div class="mini-cart-product-area ltn__scrollbar">
+        <?php if ($cart_items) : ?>
+            <?php foreach ($cart_items as $item) : ?>
+                <?php
+                $product = $item['product'];
+                $product_image_url = fresh_product_image_url($product->ID);
+                ?>
+                <div class="mini-cart-item clearfix">
+                    <div class="mini-cart-img">
+                        <a href="<?php echo esc_url(fresh_product_detail_url($product->ID)); ?>">
+                            <img <?php echo fresh_image_attrs($product_image_url, get_the_title($product), ['fallback_width' => 80, 'fallback_height' => 80]); ?>>
+                        </a>
+                        <button class="mini-cart-item-delete fresh-mini-cart-remove" type="button" data-product-id="<?php echo esc_attr($product->ID); ?>" aria-label="<?php esc_attr_e('Remove item', 'fresh'); ?>">
+                            <i class="icon-cancel" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="mini-cart-info">
+                        <h6><a href="<?php echo esc_url(fresh_product_detail_url($product->ID)); ?>"><?php echo esc_html(get_the_title($product)); ?></a></h6>
+                        <span class="mini-cart-quantity"><?php echo esc_html($item['quantity']); ?> x <?php echo esc_html(fresh_format_price($item['price'])); ?></span>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php else : ?>
+            <p class="fresh-mini-cart-empty"><?php esc_html_e('Your cart is empty.', 'fresh'); ?></p>
+        <?php endif; ?>
+    </div>
+    <?php if ($related_products) : ?>
+        <div class="fresh-mini-cart-related">
+            <h5><?php esc_html_e('You may also like', 'fresh'); ?></h5>
+            <div class="fresh-mini-cart-related-list">
+                <?php foreach ($related_products as $related_product) : ?>
+                    <?php
+                    $related_image_url = fresh_product_image_url($related_product->ID);
+                    $related_price = fresh_product_price($related_product->ID);
+                    ?>
+                    <div class="fresh-mini-cart-related-item">
+                        <a class="fresh-mini-cart-related-img" href="<?php echo esc_url(fresh_product_detail_url($related_product->ID)); ?>">
+                            <img <?php echo fresh_image_attrs($related_image_url, get_the_title($related_product), ['fallback_width' => 80, 'fallback_height' => 80]); ?>>
+                        </a>
+                        <div class="fresh-mini-cart-related-info">
+                            <a href="<?php echo esc_url(fresh_product_detail_url($related_product->ID)); ?>"><?php echo esc_html(fresh_trim_product_title($related_product, 28)); ?></a>
+                            <span><?php echo esc_html(fresh_format_price($related_price)); ?></span>
+                        </div>
+                        <a class="fresh-mini-cart-related-add fresh-add-to-cart" href="<?php echo esc_url(fresh_add_to_cart_url($related_product->ID)); ?>" data-product-id="<?php echo esc_attr($related_product->ID); ?>" aria-label="<?php echo esc_attr(sprintf(__('Add %s to cart', 'fresh'), get_the_title($related_product))); ?>">
+                            <i class="fas fa-plus" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    <?php endif; ?>
+    <div class="mini-cart-footer">
+        <div class="mini-cart-sub-total">
+            <h5><?php esc_html_e('Subtotal:', 'fresh'); ?> <span><?php echo esc_html(fresh_format_price($cart_total)); ?></span></h5>
+        </div>
+        <div class="btn-wrapper">
+            <a href="<?php echo esc_url(fresh_page_url('cart')); ?>" class="theme-btn-1 btn btn-effect-1"><?php esc_html_e('View Cart', 'fresh'); ?></a>
+            <a href="<?php echo esc_url(fresh_page_url('checkout')); ?>" class="theme-btn-2 btn btn-effect-2"><?php esc_html_e('Checkout', 'fresh'); ?></a>
+        </div>
+        <p><?php esc_html_e('Free shipping on eligible orders.', 'fresh'); ?></p>
+    </div>
+    <?php
+
+    return ob_get_clean();
+}
+
+function fresh_mini_cart_data()
+{
+    $items = [];
+    $related = [];
+
+    foreach (fresh_cart_items() as $item) {
+        $product = $item['product'];
+        $items[] = [
+            'id'        => $product->ID,
+            'title'     => get_the_title($product),
+            'url'       => fresh_product_detail_url($product->ID),
+            'image'     => fresh_product_image_url($product->ID),
+            'quantity'  => absint($item['quantity']),
+            'price'     => fresh_format_price($item['price']),
+        ];
+    }
+
+    foreach (fresh_cart_related_products(4) as $product) {
+        $related[] = [
+            'id'    => $product->ID,
+            'title' => get_the_title($product),
+            'url'   => fresh_product_detail_url($product->ID),
+            'addUrl' => fresh_add_to_cart_url($product->ID),
+            'image' => fresh_product_image_url($product->ID),
+            'price' => fresh_format_price(fresh_product_price($product->ID)),
+        ];
+    }
+
+    return [
+        'items'   => $items,
+        'related' => $related,
+        'total'   => fresh_format_price(fresh_cart_total()),
+    ];
+}
+
+function fresh_cart_related_products($limit = 4)
+{
+    $limit = max(1, absint($limit));
+    $cart_items = fresh_cart_items();
+    $cart_product_ids = [];
+    $category_ids = [];
+
+    foreach ($cart_items as $item) {
+        $product = $item['product'];
+        $cart_product_ids[] = $product->ID;
+
+        $terms = get_the_terms($product->ID, 'fresh_product_category');
+        if (is_wp_error($terms) || empty($terms)) {
+            continue;
+        }
+
+        foreach ($terms as $term) {
+            $category_ids[] = absint($term->term_id);
+        }
+    }
+
+    $category_ids = array_values(array_unique(array_filter($category_ids)));
+    $cart_product_ids = array_values(array_unique(array_filter($cart_product_ids)));
+
+    $args = [
+        'post_type'      => 'fresh_product',
+        'post_status'    => 'publish',
+        'posts_per_page' => $limit,
+        'post__not_in'   => $cart_product_ids,
+        'orderby'        => [
+            'menu_order' => 'ASC',
+            'title'      => 'ASC',
+        ],
+    ];
+
+    if ($category_ids) {
+        $args['tax_query'] = [
+            [
+                'taxonomy' => 'fresh_product_category',
+                'field'    => 'term_id',
+                'terms'    => $category_ids,
+            ],
+        ];
+    }
+
+    $related = get_posts($args);
+
+    if (count($related) >= $limit) {
+        return $related;
+    }
+
+    $exclude_ids = array_merge($cart_product_ids, wp_list_pluck($related, 'ID'));
+    $fallback = get_posts([
+        'post_type'      => 'fresh_product',
+        'post_status'    => 'publish',
+        'posts_per_page' => $limit - count($related),
+        'post__not_in'   => array_values(array_unique(array_filter($exclude_ids))),
+        'orderby'        => [
+            'menu_order' => 'ASC',
+            'title'      => 'ASC',
+        ],
+    ]);
+
+    return array_merge($related, $fallback);
 }
 
 function fresh_page_url($slug)
@@ -1409,7 +1583,12 @@ function fresh_remove_from_wishlist_url($product_id)
 
 function fresh_ajax_add_to_cart()
 {
-    check_ajax_referer('fresh_storefront', 'nonce');
+    if (
+        ! isset($_POST['nonce']) ||
+        ! wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'fresh_storefront')
+    ) {
+        wp_send_json_error(['message' => __('Please refresh the page and try again.', 'fresh')], 403);
+    }
 
     $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
     $set_quantity = ! empty($_POST['set_quantity']);
@@ -1443,6 +1622,7 @@ function fresh_ajax_add_to_cart()
         'message'         => $set_quantity ? __('Cart updated.', 'fresh') : __('Product added to cart.', 'fresh'),
         'cartCount'       => fresh_cart_count(),
         'productQuantity' => isset($cart[$product_id]) ? $cart[$product_id] : 0,
+        'miniCart'        => fresh_mini_cart_data(),
     ]);
 }
 add_action('wp_ajax_fresh_add_to_cart', 'fresh_ajax_add_to_cart');
@@ -1450,7 +1630,12 @@ add_action('wp_ajax_nopriv_fresh_add_to_cart', 'fresh_ajax_add_to_cart');
 
 function fresh_ajax_remove_from_cart()
 {
-    check_ajax_referer('fresh_storefront', 'nonce');
+    if (
+        ! isset($_POST['nonce']) ||
+        ! wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'fresh_storefront')
+    ) {
+        wp_send_json_error(['message' => __('Please refresh the page and try again.', 'fresh')], 403);
+    }
 
     $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
 
@@ -1467,9 +1652,10 @@ function fresh_ajax_remove_from_cart()
     }
 
     wp_send_json_success([
-        'message'   => __('Product removed from cart.', 'fresh'),
-        'cartCount' => fresh_cart_count(),
-        'isEmpty'   => fresh_cart_count() === 0,
+        'message'      => __('Product removed from cart.', 'fresh'),
+        'cartCount'    => fresh_cart_count(),
+        'isEmpty'      => fresh_cart_count() === 0,
+        'miniCart'     => fresh_mini_cart_data(),
     ]);
 }
 add_action('wp_ajax_fresh_remove_from_cart', 'fresh_ajax_remove_from_cart');
@@ -1539,7 +1725,6 @@ function fresh_handle_checkout()
     $email   = isset($_POST['customer_email']) ? sanitize_email(wp_unslash($_POST['customer_email'])) : '';
     $phone   = isset($_POST['customer_phone']) ? sanitize_text_field(wp_unslash($_POST['customer_phone'])) : '';
     $address = isset($_POST['customer_address']) ? sanitize_textarea_field(wp_unslash($_POST['customer_address'])) : '';
-    $delivery_time = isset($_POST['customer_delivery_time']) ? sanitize_text_field(wp_unslash($_POST['customer_delivery_time'])) : '';
     $note = isset($_POST['customer_note']) ? sanitize_textarea_field(wp_unslash($_POST['customer_note'])) : '';
 
     if ($name === '' || $email === '' || $phone === '' || $address === '') {
@@ -1561,7 +1746,6 @@ function fresh_handle_checkout()
         'email'   => $email,
         'phone'   => $phone,
         'address' => $address,
-        'delivery_time' => $delivery_time ?: __('Any time', 'fresh'),
         'note' => $note,
     ]);
     update_post_meta($order_id, '_fresh_order_items', $items);
@@ -1604,8 +1788,6 @@ function fresh_order_whatsapp_message($order_id)
         __('Phone: ', 'fresh') . ($customer['phone'] ?? ''),
         __('Address: ', 'fresh') . ($customer['address'] ?? ''),
     ];
-
-    $lines[] = __('Preferred Delivery Time: ', 'fresh') . ($customer['delivery_time'] ?? __('Any time', 'fresh'));
 
     if (! empty($customer['note'])) {
         $lines[] = __('Order Note: ', 'fresh') . $customer['note'];
