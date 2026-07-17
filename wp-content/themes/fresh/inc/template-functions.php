@@ -375,3 +375,95 @@ function fresh_static_route_template()
     exit;
 }
 add_action('template_redirect', 'fresh_static_route_template', 0);
+
+function fresh_sitemap_url_entry($url, $modified = '', $changefreq = 'weekly', $priority = '0.6')
+{
+    $modified = $modified ?: gmdate('Y-m-d H:i:s');
+    $timestamp = strtotime($modified . ' UTC');
+
+    printf(
+        "\t<url>\n\t\t<loc>%s</loc>\n\t\t<lastmod>%s</lastmod>\n\t\t<changefreq>%s</changefreq>\n\t\t<priority>%s</priority>\n\t</url>\n",
+        esc_url($url),
+        esc_html($timestamp ? gmdate('c', $timestamp) : gmdate('c')),
+        esc_html($changefreq),
+        esc_html($priority)
+    );
+}
+
+function fresh_sitemap_posts($post_type, $changefreq = 'weekly', $priority = '0.6')
+{
+    $posts = get_posts([
+        'post_type'      => $post_type,
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'orderby'        => 'modified',
+        'order'          => 'DESC',
+        'no_found_rows'  => true,
+    ]);
+
+    foreach ($posts as $post) {
+        fresh_sitemap_url_entry(get_permalink($post), $post->post_modified_gmt, $changefreq, $priority);
+    }
+}
+
+function fresh_sitemap_terms($taxonomy, $changefreq = 'weekly', $priority = '0.5')
+{
+    $terms = get_terms([
+        'taxonomy'   => $taxonomy,
+        'hide_empty' => true,
+    ]);
+
+    if (is_wp_error($terms)) {
+        return;
+    }
+
+    foreach ($terms as $term) {
+        fresh_sitemap_url_entry(get_term_link($term), gmdate('Y-m-d H:i:s'), $changefreq, $priority);
+    }
+}
+
+function fresh_render_sitemap_xml()
+{
+    if (! isset($_SERVER['REQUEST_URI'])) {
+        return;
+    }
+
+    $request_path = wp_parse_url(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])), PHP_URL_PATH);
+    $home_path = wp_parse_url(home_url('/'), PHP_URL_PATH);
+
+    if ($home_path && strpos($request_path, $home_path) === 0) {
+        $request_path = substr($request_path, strlen($home_path));
+    }
+
+    if (trim((string) $request_path, '/') !== 'sitemap.xml') {
+        return;
+    }
+
+    status_header(200);
+    nocache_headers();
+    header('Content-Type: application/xml; charset=' . get_bloginfo('charset'));
+
+    echo '<?xml version="1.0" encoding="' . esc_attr(get_bloginfo('charset')) . '"?>' . "\n";
+    echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+
+    fresh_sitemap_url_entry(home_url('/'), get_lastpostmodified('GMT'), 'daily', '1.0');
+    fresh_sitemap_posts('page', 'monthly', '0.8');
+    fresh_sitemap_posts('post', 'weekly', '0.7');
+    fresh_sitemap_posts('fresh_product', 'weekly', '0.8');
+    fresh_sitemap_terms('fresh_product_category', 'weekly', '0.6');
+    fresh_sitemap_terms('category', 'weekly', '0.5');
+
+    echo '</urlset>';
+    exit;
+}
+add_action('template_redirect', 'fresh_render_sitemap_xml', -10);
+
+function fresh_add_sitemap_to_robots($output, $public)
+{
+    if ($public) {
+        $output .= "\nSitemap: " . home_url('/sitemap.xml') . "\n";
+    }
+
+    return $output;
+}
+add_filter('robots_txt', 'fresh_add_sitemap_to_robots', 10, 2);
