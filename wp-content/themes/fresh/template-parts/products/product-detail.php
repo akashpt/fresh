@@ -16,7 +16,7 @@ $sku   = get_post_meta($product->ID, '_fresh_product_sku', true);
             <div class="row">
                 <div class="col-lg-6">
                     <div class="ltn__shop-details-img-gallery">
-                        <img src="<?php echo esc_url(has_post_thumbnail($product->ID) ? get_the_post_thumbnail_url($product->ID, 'large') : fresh_product_image_url($product->ID)); ?>" alt="<?php echo esc_attr(get_the_title($product)); ?>">
+                        <img src="<?php echo esc_url(fresh_product_image_url($product->ID, 'large')); ?>" alt="<?php echo esc_attr(get_the_title($product)); ?>">
                     </div>
                 </div>
                 <div class="col-lg-6">

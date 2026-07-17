@@ -809,10 +809,39 @@ function fresh_product_detail_url($product_id)
     return add_query_arg('product', absint($product_id), fresh_page_url('product-details'));
 }
 
-function fresh_product_image_url($product_id)
+function fresh_upload_file_exists_for_url($url)
+{
+    if (! $url) {
+        return false;
+    }
+
+    $uploads = wp_get_upload_dir();
+
+    if (empty($uploads['baseurl']) || empty($uploads['basedir'])) {
+        return false;
+    }
+
+    $base_url = wp_parse_url($uploads['baseurl'], PHP_URL_PATH);
+    $url_path = wp_parse_url($url, PHP_URL_PATH);
+
+    if (! $base_url || ! $url_path || strpos($url_path, $base_url) !== 0) {
+        return false;
+    }
+
+    $relative_path = ltrim(substr($url_path, strlen($base_url)), '/\\');
+    $file_path = trailingslashit($uploads['basedir']) . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $relative_path);
+
+    return file_exists($file_path);
+}
+
+function fresh_product_image_url($product_id, $size = 'medium')
 {
     if (has_post_thumbnail($product_id)) {
-        return get_the_post_thumbnail_url($product_id, 'medium');
+        $thumbnail_url = get_the_post_thumbnail_url($product_id, $size);
+
+        if (fresh_upload_file_exists_for_url($thumbnail_url)) {
+            return $thumbnail_url;
+        }
     }
 
     $fallbacks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
