@@ -12,13 +12,16 @@ $cart_total = fresh_cart_total();
         <div class="mini-cart-product-area ltn__scrollbar">
             <?php if ($cart_items) : ?>
                 <?php foreach ($cart_items as $item) : ?>
-                    <?php $product = $item['product']; ?>
+                    <?php
+                    $product = $item['product'];
+                    $product_image_url = fresh_product_image_url($product->ID);
+                    ?>
                     <div class="mini-cart-item clearfix">
                         <div class="mini-cart-img">
                             <a href="<?php echo esc_url(fresh_product_detail_url($product->ID)); ?>">
-                                <img src="<?php echo esc_url(fresh_product_image_url($product->ID)); ?>" alt="<?php echo esc_attr(get_the_title($product)); ?>">
+                                <img <?php echo fresh_image_attrs($product_image_url, get_the_title($product), ['fallback_width' => 300, 'fallback_height' => 300]); ?>>
                             </a>
-                            <a class="mini-cart-item-delete" href="<?php echo esc_url(fresh_remove_from_cart_url($product->ID)); ?>"><i class="icon-cancel"></i></a>
+                            <a class="mini-cart-item-delete" href="<?php echo esc_url(fresh_remove_from_cart_url($product->ID)); ?>" aria-label="<?php esc_attr_e('Remove item', 'fresh'); ?>"><i class="icon-cancel" aria-hidden="true"></i></a>
                         </div>
                         <div class="mini-cart-info">
                             <h6><a href="<?php echo esc_url(fresh_product_detail_url($product->ID)); ?>"><?php echo esc_html(get_the_title($product)); ?></a></h6>

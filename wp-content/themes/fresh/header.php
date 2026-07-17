@@ -52,22 +52,22 @@
                     </div>
                     <div class="ltn__header-options ltn__header-options-2 mb-sm-20">
                         <div class="header-cart-icon">
-                            <a href="<?php echo esc_url(fresh_page_url('cart')); ?>" title="<?php esc_attr_e('Cart', 'fresh'); ?>">
-                                <i class="fas fa-shopping-cart"></i>
+                            <a href="<?php echo esc_url(fresh_page_url('cart')); ?>" title="<?php esc_attr_e('Cart', 'fresh'); ?>" aria-label="<?php esc_attr_e('Cart', 'fresh'); ?>">
+                                <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                                 <sup class="fresh-cart-count"><?php echo esc_html(fresh_cart_count()); ?></sup>
                             </a>
                         </div>
                         <div class="header-cart-icon">
-                            <a href="<?php echo esc_url(fresh_page_url('wishlist')); ?>" title="<?php esc_attr_e('Wishlist', 'fresh'); ?>">
-                                <i class="far fa-heart"></i>
+                            <a href="<?php echo esc_url(fresh_page_url('wishlist')); ?>" title="<?php esc_attr_e('Wishlist', 'fresh'); ?>" aria-label="<?php esc_attr_e('Wishlist', 'fresh'); ?>">
+                                <i class="far fa-heart" aria-hidden="true"></i>
                                 <sup class="fresh-wishlist-count"><?php echo esc_html(fresh_wishlist_count()); ?></sup>
                             </a>
                         </div>
                       
                         <!-- Mobile Menu Button -->
                         <div class="mobile-menu-toggle d-xl-none">
-                            <a href="#ltn__utilize-mobile-menu" class="ltn__utilize-toggle">
-                                <svg viewBox="0 0 800 600">
+                            <a href="#ltn__utilize-mobile-menu" class="ltn__utilize-toggle" aria-label="<?php esc_attr_e('Open mobile menu', 'fresh'); ?>">
+                                <svg viewBox="0 0 800 600" aria-hidden="true" focusable="false">
                                     <path d="M300,220 C300,220 520,220 540,220 C740,220 640,540 520,420 C440,340 300,200 300,200" id="top"></path>
                                     <path d="M300,320 L540,320" id="middle"></path>
                                     <path d="M300,210 C300,210 520,210 540,210 C740,210 640,530 520,410 C440,330 300,190 300,190" id="bottom" transform="translate(480, 320) scale(1, -1) translate(-480, -318) "></path>

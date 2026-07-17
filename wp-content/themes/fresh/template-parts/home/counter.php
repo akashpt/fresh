@@ -26,7 +26,7 @@ $counter_class = fresh_home_option('counter_class');
                 <div class="col-md-3 col-sm-6 align-self-center">
                     <div class="ltn__counterup-item-3 text-color-white text-center">
                         <div class="counter-icon">
-                            <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/' . $counter['icon']); ?>" alt="">
+                            <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/' . $counter['icon'], '', ['fallback_width' => 70, 'fallback_height' => 70]); ?>>
                         </div>
                         <h1><span class="counter"><?php echo esc_html($counter['number']); ?></span><span class="counterUp-icon"><?php echo esc_html($counter['suffix']); ?></span></h1>
                         <h6><?php echo esc_html($counter['label']); ?></h6>

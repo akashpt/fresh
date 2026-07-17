@@ -54,7 +54,7 @@
                                 <div class="row">
                                     <div class="col-lg-6 col-12">
                                         <div class="modal-product-img">
-                                            <img src="<?php echo get_template_directory_uri(); ?>/assets/img/product/4.png" alt="#">
+                                            <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/product/4.png', '', ['fallback_width' => 300, 'fallback_height' => 300]); ?>>
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-12">
@@ -157,7 +157,7 @@
                                 <div class="row">
                                     <div class="col-12">
                                         <div class="modal-product-img">
-                                            <img src="<?php echo get_template_directory_uri(); ?>/assets/img/product/1.png" alt="#">
+                                            <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/product/1.png', '', ['fallback_width' => 300, 'fallback_height' => 300]); ?>>
                                         </div>
                                          <div class="modal-product-info">
                                             <h5><a href="product-details.html">Vegetables Juices</a></h5>
@@ -171,7 +171,7 @@
                                          <div class="additional-info d-none">
                                             <p>We want to give you <b>10% discount</b> for your first order, <br>  Use discount code at checkout</p>
                                             <div class="payment-method">
-                                                <img src="<?php echo get_template_directory_uri(); ?>/assets/img/icons/payment.png" alt="#">
+                                                <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/icons/payment.png', '', ['fallback_width' => 260, 'fallback_height' => 32]); ?>>
                                             </div>
                                          </div>
                                     </div>
@@ -201,7 +201,7 @@
                                 <div class="row">
                                     <div class="col-12">
                                         <div class="modal-product-img">
-                                            <img src="<?php echo get_template_directory_uri(); ?>/assets/img/product/7.png">
+                                            <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/product/7.png', '', ['fallback_width' => 300, 'fallback_height' => 300]); ?>>
                                         </div>
                                          <div class="modal-product-info">
                                             <h5><a href="product-details.html">Vegetables Juices</a></h5>
@@ -214,7 +214,7 @@
                                          <div class="additional-info d-none">
                                             <p>We want to give you <b>10% discount</b> for your first order, <br>  Use discount code at checkout</p>
                                             <div class="payment-method">
-                                                <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/icons/payment.png'); ?>" alt="#">
+                                                <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/icons/payment.png', '', ['fallback_width' => 260, 'fallback_height' => 32]); ?>>
                                             </div>
                                          </div>
                                     </div>

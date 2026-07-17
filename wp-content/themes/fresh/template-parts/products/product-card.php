@@ -18,6 +18,7 @@ $product_number = isset($args['product_number']) ? absint($args['product_number'
 $cart = fresh_get_cart();
 $cart_quantity = isset($cart[$product->ID]) ? absint($cart[$product->ID]) : 0;
 $card_quantity = $cart_quantity > 0 ? $cart_quantity : 1;
+$product_image_url = fresh_product_image_url($product->ID);
 ?>
 
 <div class="<?php echo esc_attr($column_class); ?>">
@@ -25,12 +26,12 @@ $card_quantity = $cart_quantity > 0 ? $cart_quantity : 1;
         <div class="product-img">
              
             <a href="<?php echo esc_url($detail_url); ?>">
-                <img src="<?php echo esc_url(fresh_product_image_url($product->ID)); ?>" alt="<?php echo esc_attr($product_title); ?>">
+                <img <?php echo fresh_image_attrs($product_image_url, $product_title, ['fallback_width' => 300, 'fallback_height' => 300]); ?>>
             </a>
             <div class="product-badge">
                 <ul>
                     <li><a class="fresh-add-to-wishlist" href="<?php echo esc_url(fresh_add_to_wishlist_url($product->ID)); ?>" data-product-id="<?php echo esc_attr($product->ID); ?>" title="<?php esc_attr_e('Wishlist', 'fresh'); ?>" aria-label="<?php esc_attr_e('Add to Wishlist', 'fresh'); ?>">
-                            <i class="far fa-heart"></i>
+                            <i class="far fa-heart" aria-hidden="true"></i>
                     </a></li>
                 </ul>
             </div>
@@ -41,11 +42,11 @@ $card_quantity = $cart_quantity > 0 ? $cart_quantity : 1;
                 <div>
                     <div class="product-ratting">
                         <ul>
-                            <li><a href="<?php echo esc_url($detail_url); ?>"><i class="fas fa-star"></i></a></li>
-                            <li><a href="<?php echo esc_url($detail_url); ?>"><i class="fas fa-star"></i></a></li>
-                            <li><a href="<?php echo esc_url($detail_url); ?>"><i class="fas fa-star"></i></a></li>
-                            <li><a href="<?php echo esc_url($detail_url); ?>"><i class="fas fa-star-half-alt"></i></a></li>
-                            <li><a href="<?php echo esc_url($detail_url); ?>"><i class="far fa-star"></i></a></li>
+                            <li><a href="<?php echo esc_url($detail_url); ?>" aria-label="<?php echo esc_attr(sprintf(__('View %s details', 'fresh'), $product_title)); ?>"><i class="fas fa-star" aria-hidden="true"></i></a></li>
+                            <li><a href="<?php echo esc_url($detail_url); ?>" aria-label="<?php echo esc_attr(sprintf(__('View %s details', 'fresh'), $product_title)); ?>"><i class="fas fa-star" aria-hidden="true"></i></a></li>
+                            <li><a href="<?php echo esc_url($detail_url); ?>" aria-label="<?php echo esc_attr(sprintf(__('View %s details', 'fresh'), $product_title)); ?>"><i class="fas fa-star" aria-hidden="true"></i></a></li>
+                            <li><a href="<?php echo esc_url($detail_url); ?>" aria-label="<?php echo esc_attr(sprintf(__('View %s details', 'fresh'), $product_title)); ?>"><i class="fas fa-star-half-alt" aria-hidden="true"></i></a></li>
+                            <li><a href="<?php echo esc_url($detail_url); ?>" aria-label="<?php echo esc_attr(sprintf(__('View %s details', 'fresh'), $product_title)); ?>"><i class="far fa-star" aria-hidden="true"></i></a></li>
                         </ul>
                     </div>
                     <h2 class="product-title">
@@ -61,7 +62,7 @@ $card_quantity = $cart_quantity > 0 ? $cart_quantity : 1;
                         <button class="fresh-card-qty-btn fresh-card-qty-plus" type="button" aria-label="<?php esc_attr_e('Increase quantity', 'fresh'); ?>">+</button>
                     </div>
                     <a class="product-cart-btn fresh-add-to-cart" href="<?php echo esc_url(fresh_add_to_cart_url($product->ID)); ?>" data-product-id="<?php echo esc_attr($product->ID); ?>" data-cart-mode="set" title="<?php esc_attr_e('Update Cart', 'fresh'); ?>" aria-label="<?php esc_attr_e('Update Cart', 'fresh'); ?>">
-                        <i class="fas fa-shopping-cart"></i>
+                        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                         <span><?php echo esc_html($cart_quantity > 0 ? __('Update', 'fresh') : __('Add', 'fresh')); ?></span>
                     </a>
                 </div>

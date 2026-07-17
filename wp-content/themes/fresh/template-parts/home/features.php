@@ -14,7 +14,7 @@ $features = fresh_home_features($variant);
                                 <div class="col-xl-3 col-md-6 col-12">
                                     <div class="ltn__feature-item ltn__feature-item-8">
                                         <div class="ltn__feature-icon">
-                                            <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/' . $feature['icon']); ?>" alt="">
+                                            <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/' . $feature['icon'], '', ['fallback_width' => 80, 'fallback_height' => 80]); ?>>
                                         </div>
                                         <div class="ltn__feature-info">
                                             <h4><?php echo esc_html($feature['title']); ?></h4>
@@ -38,7 +38,7 @@ $features = fresh_home_features($variant);
                         <?php foreach ($features as $feature) : ?>
                             <div class="ltn__feature-item ltn__feature-item-8">
                                 <div class="ltn__feature-icon">
-                                    <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/' . $feature['icon']); ?>" alt="">
+                                    <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/' . $feature['icon'], '', ['fallback_width' => 80, 'fallback_height' => 80]); ?>>
                                 </div>
                                 <div class="ltn__feature-info">
                                     <h4><?php echo esc_html($feature['title']); ?></h4>

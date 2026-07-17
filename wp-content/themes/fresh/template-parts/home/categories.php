@@ -18,12 +18,12 @@ $icons = ['category-1.png', 'category-2.png', 'category-3.png', 'category-4.png'
                 </div>
             </div>
         </div>
-        <div class="row ltn__category-slider-active slick-arrow-1">
+        <div class="row ltn__category-slider-active slick-arrow-1" aria-label="<?php esc_attr_e('Product categories', 'fresh'); ?>">
             <div class="col-12">
                 <div class="ltn__category-item ltn__category-item-3 text-center">
                     <div class="ltn__category-item-img">
                         <a href="<?php echo esc_url(fresh_page_url('shop')); ?>">
-                            <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/icons/icon-img/category-1.png'); ?>" alt="">
+                            <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/icons/icon-img/category-1.png', '', ['fallback_width' => 120, 'fallback_height' => 90]); ?>>
                         </a>
                     </div>
                     <div class="ltn__category-item-name">
@@ -38,7 +38,7 @@ $icons = ['category-1.png', 'category-2.png', 'category-3.png', 'category-4.png'
                         <div class="ltn__category-item ltn__category-item-3 text-center">
                             <div class="ltn__category-item-img">
                                 <a href="<?php echo esc_url(add_query_arg('category', $term->slug, fresh_page_url('shop'))); ?>">
-                                    <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/icons/icon-img/' . $icons[$index % count($icons)]); ?>" alt="">
+                                    <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/icons/icon-img/' . $icons[$index % count($icons)], '', ['fallback_width' => 120, 'fallback_height' => 90]); ?>>
                                 </a>
                             </div>
                             <div class="ltn__category-item-name">

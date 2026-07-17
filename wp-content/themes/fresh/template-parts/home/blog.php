@@ -25,7 +25,7 @@ $posts = new WP_Query([
                                     <?php if (has_post_thumbnail()) : ?>
                                         <?php the_post_thumbnail('medium_large'); ?>
                                     <?php else : ?>
-                                        <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/blog/1.jpg'); ?>" alt="">
+                                        <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/blog/1.jpg', get_the_title(), ['fallback_width' => 370, 'fallback_height' => 260]); ?>>
                                     <?php endif; ?>
                                 </a>
                             </div>
@@ -51,7 +51,7 @@ $posts = new WP_Query([
                 <?php for ($i = 1; $i <= 3; $i++) : ?>
                     <div class="col-lg-12">
                         <div class="ltn__blog-item ltn__blog-item-3">
-                            <div class="ltn__blog-img"><img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/blog/' . $i . '.jpg'); ?>" alt=""></div>
+                            <div class="ltn__blog-img"><img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/blog/' . $i . '.jpg', get_the_title(), ['fallback_width' => 370, 'fallback_height' => 260]); ?>></div>
                             <div class="ltn__blog-brief">
                                 <h3 class="ltn__blog-title"><?php esc_html_e('Add posts to show latest blog content', 'fresh'); ?></h3>
                             </div>

@@ -1,5 +1,5 @@
 <div class="ltn__slider-area ltn__slider-3 section-bg-1">
-    <div class="ltn__slide-one-active slick-slide-arrow-1 slick-slide-dots-1">
+    <div class="ltn__slide-one-active slick-slide-arrow-1 slick-slide-dots-1" aria-label="<?php esc_attr_e('Featured products', 'fresh'); ?>">
         <?php for ($i = 1; $i <= 2; $i++) : ?>
             <div class="ltn__slide-item ltn__slide-item-2 ltn__slide-item-3 ltn__slide-item-3-normal">
                 <div class="ltn__slide-item-inner <?php echo $i === 2 ? 'text-right text-end' : ''; ?>">
@@ -10,7 +10,7 @@
                                     <div class="slide-item-info-inner ltn__slide-animation">
                                         <h6 class="slide-sub-title animated <?php echo $i === 2 ? 'ltn__secondary-color' : ''; ?>">
                                             <?php if ($i === 1) : ?>
-                                                <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/icons/icon-img/1.png'); ?>" alt="">
+                                                <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/icons/icon-img/1.png', '', ['fallback_width' => 32, 'fallback_height' => 32]); ?>>
                                             <?php endif; ?>
                                             <?php echo esc_html(fresh_home_option('hero_' . $i . '_subtitle')); ?>
                                         </h6>
@@ -26,7 +26,7 @@
                                     </div>
                                 </div>
                                 <div class="slide-item-img <?php echo $i === 2 ? 'slide-img-left' : ''; ?>">
-                                    <img src="<?php echo esc_url(fresh_home_option('hero_' . $i . '_image')); ?>" alt="">
+                                    <img <?php echo fresh_image_attrs(fresh_home_option('hero_' . $i . '_image'), fresh_home_option('hero_' . $i . '_title'), ['fallback_width' => 720, 'fallback_height' => 560, 'loading' => $i === 1 ? 'eager' : 'lazy', 'fetchpriority' => $i === 1 ? 'high' : '']); ?>>
                                 </div>
                             </div>
                         </div>

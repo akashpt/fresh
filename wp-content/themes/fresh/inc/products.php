@@ -17,7 +17,7 @@ function fresh_register_product_post_types()
         'menu_icon'    => 'dashicons-products',
         'rewrite'      => ['slug' => 'products'],
         'show_in_rest' => true,
-        'supports'     => ['title', 'editor', 'excerpt', 'thumbnail'],
+        'supports'     => ['title', 'editor', 'excerpt', 'thumbnail', 'page-attributes'],
     ]);
 
     register_post_type('fresh_order', [
@@ -268,6 +268,8 @@ function fresh_render_product_meta_box($post)
     $sale_price = get_post_meta($post->ID, '_fresh_product_sale_price', true);
     $sku        = get_post_meta($post->ID, '_fresh_product_sku', true);
     $unit       = get_post_meta($post->ID, '_fresh_product_unit', true);
+    $featured   = get_post_meta($post->ID, '_fresh_product_featured_front', true);
+    $front_order = get_post_meta($post->ID, '_fresh_product_front_order', true);
     ?>
     <p>
         <label for="fresh_product_price"><strong><?php esc_html_e('Price', 'fresh'); ?></strong></label><br>
@@ -284,6 +286,18 @@ function fresh_render_product_meta_box($post)
     <p>
         <label for="fresh_product_unit"><strong><?php esc_html_e('Unit', 'fresh'); ?></strong></label><br>
         <input type="text" id="fresh_product_unit" name="fresh_product_unit" value="<?php echo esc_attr($unit); ?>" placeholder="kg, box, piece" style="width: 100%;">
+    </p>
+    <hr>
+    <p>
+        <label>
+            <input type="checkbox" name="fresh_product_featured_front" value="1" <?php checked($featured, '1'); ?>>
+            <strong><?php esc_html_e('Show on Front Page Featured Products', 'fresh'); ?></strong>
+        </label>
+    </p>
+    <p>
+        <label for="fresh_product_front_order"><strong><?php esc_html_e('Front Page Order', 'fresh'); ?></strong></label><br>
+        <input type="number" step="1" min="1" id="fresh_product_front_order" name="fresh_product_front_order" value="<?php echo esc_attr($front_order !== '' ? $front_order : 999); ?>" style="width: 100%;">
+        <span class="description"><?php esc_html_e('Use 1 for first, 2 for second, 3 for third. If another featured product already uses that number, it will move down automatically.', 'fresh'); ?></span>
     </p>
     <?php
 }
@@ -316,8 +330,49 @@ function fresh_save_product_meta($post_id)
         $value = isset($_POST[$field_name]) ? sanitize_text_field(wp_unslash($_POST[$field_name])) : '';
         update_post_meta($post_id, $meta_key, $value);
     }
+
+    $featured_front = isset($_POST['fresh_product_featured_front']) ? '1' : '0';
+    update_post_meta($post_id, '_fresh_product_featured_front', $featured_front);
+
+    $front_order = isset($_POST['fresh_product_front_order'])
+        ? max(1, absint(wp_unslash($_POST['fresh_product_front_order'])))
+        : 999;
+    update_post_meta($post_id, '_fresh_product_front_order', $front_order);
+
+    if ($featured_front === '1') {
+        fresh_normalize_featured_front_order($post_id, $front_order);
+    }
 }
 add_action('save_post_fresh_product', 'fresh_save_product_meta');
+
+function fresh_normalize_featured_front_order($current_post_id, $requested_order)
+{
+    $featured_product_ids = get_posts([
+        'post_type'      => 'fresh_product',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+        'post__not_in'   => [$current_post_id],
+        'meta_key'       => '_fresh_product_front_order',
+        'orderby'        => [
+            'meta_value_num' => 'ASC',
+            'title'          => 'ASC',
+        ],
+        'meta_query'     => [
+            [
+                'key'   => '_fresh_product_featured_front',
+                'value' => '1',
+            ],
+        ],
+    ]);
+
+    $insert_at = max(0, min((int) $requested_order - 1, count($featured_product_ids)));
+    array_splice($featured_product_ids, $insert_at, 0, [$current_post_id]);
+
+    foreach ($featured_product_ids as $index => $product_id) {
+        update_post_meta($product_id, '_fresh_product_front_order', $index + 1);
+    }
+}
 
 function fresh_order_meta_boxes()
 {
@@ -809,45 +864,30 @@ function fresh_product_detail_url($product_id)
     return add_query_arg('product', absint($product_id), fresh_page_url('product-details'));
 }
 
-function fresh_upload_file_exists_for_url($url)
+function fresh_product_placeholder_image_url()
 {
-    if (! $url) {
-        return false;
-    }
-
-    $uploads = wp_get_upload_dir();
-
-    if (empty($uploads['baseurl']) || empty($uploads['basedir'])) {
-        return false;
-    }
-
-    $base_url = wp_parse_url($uploads['baseurl'], PHP_URL_PATH);
-    $url_path = wp_parse_url($url, PHP_URL_PATH);
-
-    if (! $base_url || ! $url_path || strpos($url_path, $base_url) !== 0) {
-        return false;
-    }
-
-    $relative_path = ltrim(substr($url_path, strlen($base_url)), '/\\');
-    $file_path = trailingslashit($uploads['basedir']) . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $relative_path);
-
-    return file_exists($file_path);
+    return get_template_directory_uri() . '/assets/img/product/no-image.svg';
 }
 
 function fresh_product_image_url($product_id, $size = 'medium')
 {
-    if (has_post_thumbnail($product_id)) {
-        $thumbnail_url = get_the_post_thumbnail_url($product_id, $size);
-
-        if (fresh_upload_file_exists_for_url($thumbnail_url)) {
-            return $thumbnail_url;
-        }
+    if (! has_post_thumbnail($product_id)) {
+        return fresh_product_placeholder_image_url();
     }
 
-    $fallbacks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    $image_id = $fallbacks[absint($product_id) % count($fallbacks)];
+    $image_url = get_the_post_thumbnail_url($product_id, $size);
 
-    return get_template_directory_uri() . '/assets/img/product/' . $image_id . '.png';
+    if (! $image_url) {
+        return fresh_product_placeholder_image_url();
+    }
+
+    $image_path = function_exists('fresh_local_file_path_from_url') ? fresh_local_file_path_from_url($image_url) : '';
+
+    if ($image_path && ! file_exists($image_path)) {
+        return fresh_product_placeholder_image_url();
+    }
+
+    return $image_url;
 }
 
 function fresh_page_url($slug)

@@ -3,7 +3,7 @@
         <div class="row">
             <div class="col-lg-6 align-self-center">
                 <div class="about-us-img-wrap about-img-left">
-                    <img src="<?php echo esc_url(fresh_home_option('about_image')); ?>" alt="<?php esc_attr_e('About', 'fresh'); ?>">
+                    <img <?php echo fresh_image_attrs(fresh_home_option('about_image'), __('About', 'fresh'), ['fallback_width' => 620, 'fallback_height' => 520]); ?>>
                 </div>
             </div>
             <div class="col-lg-6 align-self-center">

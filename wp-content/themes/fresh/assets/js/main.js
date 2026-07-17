@@ -88,12 +88,74 @@
 
             scheduleTask(function() {
                 $slider.not('.slick-initialized').slick(options);
+                normalizeSlickAccessibility($slider);
 
                 if (afterChange) {
                     $slider.off('afterChange.freshPerformance').on('afterChange.freshPerformance', afterChange);
                 }
             });
         }
+
+        function normalizeSlickAccessibility($scope) {
+            var $sliders = $scope && $scope.length ? $scope : $('.slick-slider');
+
+            $sliders.each(function(sliderIndex) {
+                var $slider = $(this);
+                var sliderId = $slider.attr('id') || 'fresh-slick-slider-' + sliderIndex;
+                var label = $slider.attr('aria-label') || $slider.data('aria-label') || 'Carousel';
+                var $realSlides = $slider.find('.slick-slide').not('.slick-cloned');
+
+                $slider.attr({
+                    id: sliderId,
+                    'aria-label': label
+                });
+
+                // Slick creates listbox markup without a name; add one and make every real slide addressable.
+                $slider.find('.slick-track').attr({
+                    role: 'listbox',
+                    'aria-label': label
+                });
+
+                $realSlides.each(function(index) {
+                    $(this)
+                        .attr({
+                            id: sliderId + '-slide-' + index,
+                            role: 'option',
+                            'aria-label': 'Slide ' + (index + 1) + ' of ' + $realSlides.length
+                        })
+                        .removeAttr('aria-describedby');
+                });
+
+                $slider.find('.slick-cloned')
+                    .removeAttr('id aria-describedby aria-labelledby')
+                    .attr('aria-hidden', 'true');
+
+                $slider.find('.slick-dots').closest('[role="toolbar"]').removeAttr('role');
+
+                // Slick puts tab attributes on role=presentation <li>; move valid tab semantics to the button.
+                $slider.find('.slick-dots').attr('role', 'tablist').find('li').each(function(index) {
+                    var $dot = $(this);
+                    var isActive = $dot.hasClass('slick-active');
+
+                    $dot
+                        .attr('role', 'presentation')
+                        .removeAttr('aria-selected aria-controls aria-label tabindex id');
+
+                    $dot.find('button').first().attr({
+                        type: 'button',
+                        role: 'tab',
+                        'aria-selected': isActive ? 'true' : 'false',
+                        'aria-controls': sliderId + '-slide-' + index,
+                        'aria-label': 'Go to slide ' + (index + 1),
+                        tabindex: isActive ? '0' : '-1'
+                    });
+                });
+            });
+        }
+
+        $(document).on('init reInit afterChange', '.slick-slider', function() {
+            normalizeSlickAccessibility($(this));
+        });
 
         /* --------------------------------------------------------
             2. Mobile Menu

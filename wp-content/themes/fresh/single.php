@@ -115,7 +115,7 @@ get_header();
                                                         <?php if (has_post_thumbnail()) : ?>
                                                             <?php the_post_thumbnail('thumbnail'); ?>
                                                         <?php else : ?>
-                                                            <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/blog/1.jpg'); ?>" alt="">
+                                                            <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/blog/1.jpg', get_the_title(), ['fallback_width' => 150, 'fallback_height' => 150]); ?>>
                                                         <?php endif; ?>
                                                     </a>
                                                 </div>
@@ -181,7 +181,7 @@ get_header();
 
                         <div class="widget ltn__banner-widget">
                             <a href="<?php echo esc_url(fresh_page_url('shop')); ?>">
-                                <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/banner/banner-4.jpg'); ?>" alt="<?php esc_attr_e('Shop Fresh Products', 'fresh'); ?>">
+                                <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/banner/banner-4.jpg', __('Shop Fresh Products', 'fresh'), ['fallback_width' => 370, 'fallback_height' => 460]); ?>>
                             </a>
                         </div>
                     </aside>

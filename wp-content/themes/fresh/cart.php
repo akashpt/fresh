@@ -68,10 +68,11 @@ fresh_breadcrumb_banner(__('Cart', 'fresh'), __('Shopping cart', 'fresh'));
                                     $sale_price = (float) get_post_meta($product->ID, '_fresh_product_sale_price', true);
                                     $has_product_discount = $regular_price > 0 && $sale_price > 0 && $sale_price < $regular_price;
                                     $line_product_discount = $has_product_discount ? ($regular_price - $sale_price) * absint($item['quantity']) : 0;
+                                    $product_image_url = fresh_product_image_url($product->ID);
                                     ?>
                                     <div class="fresh-cart-item">
                                         <a class="fresh-cart-item-image" href="<?php echo esc_url(fresh_product_detail_url($product->ID)); ?>">
-                                            <img src="<?php echo esc_url(fresh_product_image_url($product->ID)); ?>" alt="<?php echo esc_attr(get_the_title($product)); ?>">
+                                            <img <?php echo fresh_image_attrs($product_image_url, get_the_title($product), ['fallback_width' => 300, 'fallback_height' => 300]); ?>>
                                         </a>
 
                                         <div class="fresh-cart-item-info">

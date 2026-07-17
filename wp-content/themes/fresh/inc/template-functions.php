@@ -58,6 +58,108 @@ function fresh_default_logo_url()
     return get_template_directory_uri() . '/assets/img/logo.png';
 }
 
+function fresh_local_file_path_from_url($url)
+{
+    $url_path = wp_parse_url($url, PHP_URL_PATH);
+
+    if (! $url_path) {
+        return '';
+    }
+
+    $theme_base_url = wp_parse_url(get_template_directory_uri(), PHP_URL_PATH);
+
+    if ($theme_base_url && strpos($url_path, $theme_base_url) === 0) {
+        $relative_path = ltrim(substr($url_path, strlen($theme_base_url)), '/\\');
+        return trailingslashit(get_template_directory()) . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $relative_path);
+    }
+
+    $uploads = wp_get_upload_dir();
+    $uploads_base_url = ! empty($uploads['baseurl']) ? wp_parse_url($uploads['baseurl'], PHP_URL_PATH) : '';
+
+    if ($uploads_base_url && strpos($url_path, $uploads_base_url) === 0) {
+        $relative_path = ltrim(substr($url_path, strlen($uploads_base_url)), '/\\');
+        return trailingslashit($uploads['basedir']) . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $relative_path);
+    }
+
+    return '';
+}
+
+function fresh_image_dimensions($url, $fallback_width = 800, $fallback_height = 800)
+{
+    $file_path = fresh_local_file_path_from_url($url);
+
+    if ($file_path && file_exists($file_path)) {
+        $size = getimagesize($file_path);
+
+        if (! empty($size[0]) && ! empty($size[1])) {
+            return [
+                'width'  => absint($size[0]),
+                'height' => absint($size[1]),
+            ];
+        }
+    }
+
+    return [
+        'width'  => absint($fallback_width),
+        'height' => absint($fallback_height),
+    ];
+}
+
+function fresh_image_attrs($url, $alt = '', $args = [])
+{
+    $args = wp_parse_args($args, [
+        'class'           => '',
+        'fallback_width'  => 800,
+        'fallback_height' => 800,
+        'loading'         => 'lazy',
+        'decoding'        => 'async',
+        'fetchpriority'   => '',
+    ]);
+    $dimensions = fresh_image_dimensions($url, $args['fallback_width'], $args['fallback_height']);
+    $attrs = [
+        'src'      => esc_url($url),
+        'alt'      => esc_attr($alt),
+        'width'    => $dimensions['width'],
+        'height'   => $dimensions['height'],
+        'loading'  => $args['loading'],
+        'decoding' => $args['decoding'],
+    ];
+
+    if ($args['class']) {
+        $attrs['class'] = $args['class'];
+    }
+
+    if ($args['fetchpriority']) {
+        $attrs['fetchpriority'] = $args['fetchpriority'];
+    }
+
+    return implode(' ', array_map(
+        function ($name, $value) {
+            return sprintf('%s="%s"', esc_attr($name), esc_attr($value));
+        },
+        array_keys($attrs),
+        $attrs
+    ));
+}
+
+function fresh_preload_critical_assets()
+{
+    $hero_image = fresh_home_option('hero_1_image');
+
+    if ($hero_image) {
+        printf(
+            '<link rel="preload" as="image" href="%s" fetchpriority="high">' . "\n",
+            esc_url($hero_image)
+        );
+    }
+
+    printf(
+        '<link rel="preload" as="font" type="font/woff2" href="%s" crossorigin>' . "\n",
+        esc_url(get_template_directory_uri() . '/assets/webfonts/fa-solid-900.woff2')
+    );
+}
+add_action('wp_head', 'fresh_preload_critical_assets', 1);
+
 function fresh_site_logo()
 {
     $logo_id = fresh_logo_attachment_id();
@@ -84,10 +186,13 @@ function fresh_site_logo()
     }
 
     printf(
-        '<a href="%s"><img src="%s" alt="%s"></a>',
+        '<a href="%s"><img %s></a>',
         esc_url(home_url('/')),
-        esc_url(fresh_default_logo_url()),
-        esc_attr(get_bloginfo('name'))
+        fresh_image_attrs(fresh_default_logo_url(), get_bloginfo('name'), [
+            'class'           => 'custom-logo fresh-theme-logo',
+            'fallback_width'  => 220,
+            'fallback_height' => 80,
+        ])
     );
 }
 
@@ -217,10 +322,6 @@ function fresh_breadcrumb_banner($title, $subtitle = '')
 
 function fresh_static_route_template()
 {
-    if (! is_404()) {
-        return;
-    }
-
     $request_path = isset($_SERVER['REQUEST_URI']) ? wp_parse_url(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])), PHP_URL_PATH) : '';
     $home_path = wp_parse_url(home_url('/'), PHP_URL_PATH);
 
@@ -229,6 +330,26 @@ function fresh_static_route_template()
     }
 
     $slug = trim((string) $request_path, '/');
+
+    if (in_array($slug, ['404', 'error-page'], true)) {
+        $template = locate_template('404.php');
+
+        if (! $template) {
+            return;
+        }
+
+        global $wp_query;
+        $wp_query->is_404 = true;
+
+        status_header(404);
+        include $template;
+        exit;
+    }
+
+    if (! is_404()) {
+        return;
+    }
+
     $templates = [
         'cart'     => 'cart.php',
         'checkout' => 'checkout.php',

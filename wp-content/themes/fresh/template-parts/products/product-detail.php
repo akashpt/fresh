@@ -8,6 +8,7 @@ if (! $product instanceof WP_Post) {
 $price = fresh_product_price($product->ID);
 $unit  = get_post_meta($product->ID, '_fresh_product_unit', true);
 $sku   = get_post_meta($product->ID, '_fresh_product_sku', true);
+$product_image_url = fresh_product_image_url($product->ID, 'large');
 ?>
 
 <main id="primary" class="site-main">
@@ -16,7 +17,7 @@ $sku   = get_post_meta($product->ID, '_fresh_product_sku', true);
             <div class="row">
                 <div class="col-lg-6">
                     <div class="ltn__shop-details-img-gallery">
-                        <img src="<?php echo esc_url(fresh_product_image_url($product->ID, 'large')); ?>" alt="<?php echo esc_attr(get_the_title($product)); ?>">
+                        <img <?php echo fresh_image_attrs($product_image_url, get_the_title($product), ['fallback_width' => 800, 'fallback_height' => 800]); ?>>
                     </div>
                 </div>
                 <div class="col-lg-6">
