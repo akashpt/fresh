@@ -55,6 +55,45 @@
         --------------------------------------------------------- */
         var $window = $(window),
         $body = $('body');
+        var scheduleTask = window.requestIdleCallback || function(callback) {
+            return window.setTimeout(callback, 1);
+        };
+        var wowInstance = window.WOW ? new WOW() : null;
+        var wowRefreshQueued = false;
+
+        function initWow() {
+            if (wowInstance) {
+                wowInstance.init();
+            }
+        }
+
+        function refreshWow() {
+            if (!wowInstance || wowRefreshQueued) {
+                return;
+            }
+
+            wowRefreshQueued = true;
+            scheduleTask(function() {
+                wowRefreshQueued = false;
+                wowInstance.init();
+            });
+        }
+
+        function initSlickWhenNeeded(selector, options, afterChange) {
+            var $slider = $(selector);
+
+            if (!$slider.length || typeof $slider.slick !== 'function') {
+                return;
+            }
+
+            scheduleTask(function() {
+                $slider.not('.slick-initialized').slick(options);
+
+                if (afterChange) {
+                    $slider.off('afterChange.freshPerformance').on('afterChange.freshPerformance', afterChange);
+                }
+            });
+        }
 
         /* --------------------------------------------------------
             2. Mobile Menu
@@ -201,7 +240,7 @@
         --------------------------------------------------------- */
         // jQuery for page scrolling feature - requires jQuery Easing plugin
         $(function() {
-            $('a.page-scroll').bind('click', function(event) {
+            $('a.page-scroll').on('click', function(event) {
                 var $anchor = $(this);
                 $('html, body').stop().animate({
                     scrollTop: $($anchor.attr('href')).offset().top
@@ -241,7 +280,7 @@
         /* ---------------------------------------------------------
             8. wow js init
         --------------------------------------------------------- */
-        new WOW().init();
+        initWow();
 
 
         /* ---------------------------------------------------------
@@ -350,7 +389,7 @@
         /* --------------------------------------------------------
             15. Slider One Active 
         --------------------------------------------------------- */
-        $('.ltn__slide-one-active').slick({
+        initSlickWhenNeeded('.ltn__slide-one-active', {
             autoplay: false,
             autoplaySpeed: 2000,
             arrows: true,
@@ -372,14 +411,12 @@
                     }
                 }
             ]
-        }).on('afterChange', function(){
-            new WOW().init();
-        });
+        }, refreshWow);
 
         /* --------------------------------------------------------
             15-2. Slider Active 2
         --------------------------------------------------------- */
-        $('.ltn__slide-active-2').slick({
+        initSlickWhenNeeded('.ltn__slide-active-2', {
             autoplay: false,
             autoplaySpeed: 2000,
             arrows: false,
@@ -401,9 +438,7 @@
                     }
                 }
             ]
-        }).on('afterChange', function(){
-            new WOW().init();
-        });
+        }, refreshWow);
 
 
         /* --------------------------------------------------------
@@ -536,7 +571,7 @@
         /* --------------------------------------------------------
             17. Tab Product Slider One
         --------------------------------------------------------- */
-        $('.ltn__tab-product-slider-one-active').slick({
+        initSlickWhenNeeded('.ltn__tab-product-slider-one-active', {
             arrows: true,
             dots: false,
             infinite: true,
@@ -637,7 +672,7 @@
         /* --------------------------------------------------------
             18. Blog Slider One
         --------------------------------------------------------- */
-        $('.ltn__blog-slider-one-active').slick({
+        initSlickWhenNeeded('.ltn__blog-slider-one-active', {
             arrows: true,
             dots: false,
             infinite: true,
@@ -833,7 +868,7 @@
         /* --------------------------------------------------------
             22. Category Slider
         --------------------------------------------------------- */
-        $('.ltn__category-slider-active').slick({
+        initSlickWhenNeeded('.ltn__category-slider-active', {
             arrows: true,
             dots: false,
             infinite: true,
@@ -1187,9 +1222,16 @@
                 'items': 12,
                 "image_size": "600", /* 320 */
             });
-            $('.ltn__instafeed').on("DOMNodeInserted", function (e) {
-                if (e.target.className == 'instagram_gallery') {
-                    $('.ltn__instafeed-slider-2 .' + e.target.className).slick({
+            var instafeedObserver = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    $(mutation.addedNodes).each(function() {
+                        if (!$(this).hasClass('instagram_gallery')) {
+                            return;
+                        }
+
+                        var galleryClass = this.className;
+
+                        initSlickWhenNeeded('.ltn__instafeed-slider-2 .' + galleryClass, {
                         infinite: true,
                         slidesToShow: 3,
                         slidesToScroll: 1,
@@ -1206,8 +1248,8 @@
                                 slidesToShow: 1
                             }
                         }]
-                    })
-                    $('.ltn__instafeed-slider-1 .' + e.target.className).slick({
+                        });
+                        initSlickWhenNeeded('.ltn__instafeed-slider-1 .' + galleryClass, {
                         infinite: true,
                         slidesToShow: 5,
                         slidesToScroll: 1,
@@ -1234,8 +1276,13 @@
                                 slidesToShow: 1
                             }
                         }]
+                        });
                     });
-                }
+                });
+            });
+            instafeedObserver.observe($('.ltn__instafeed').get(0), {
+                childList: true,
+                subtree: true
             });
         };
 
@@ -1418,14 +1465,31 @@
     /* --------------------------------------------------------
         36. Header menu sticky
     -------------------------------------------------------- */
-    $(window).on('scroll',function() {    
-        var scroll = $(window).scrollTop();
-        if (scroll < 445) {
-            $(".ltn__header-sticky").removeClass("sticky-active");
-        } else {
-            $(".ltn__header-sticky").addClass("sticky-active");
+    var stickyTicking = false;
+    var stickyActive = null;
+    var $stickyHeader = $(".ltn__header-sticky");
+
+    function updateStickyHeader() {
+        var shouldStick = $(window).scrollTop() >= 445;
+
+        if (shouldStick !== stickyActive) {
+            stickyActive = shouldStick;
+            $stickyHeader.toggleClass("sticky-active", shouldStick);
         }
-    }); 
+
+        stickyTicking = false;
+    }
+
+    $(window).on('scroll', function() {
+        if (stickyTicking) {
+            return;
+        }
+
+        stickyTicking = true;
+        (window.requestAnimationFrame || function(callback) {
+            return window.setTimeout(callback, 16);
+        })(updateStickyHeader);
+    });
 
 
     $(window).on('load',function(){

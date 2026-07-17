@@ -3,6 +3,12 @@
 border-radius: 10px;
 }
 
+.slick-slider,
+.slick-list,
+.slick-track {
+  touch-action: pan-y;
+}
+
 .header-cart-icon {
   display: inline-block;
   margin-right: 18px;
