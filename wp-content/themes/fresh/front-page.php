@@ -15,9 +15,15 @@ get_header();
 <?php get_template_part('template-parts/home/categories'); ?>
 <?php
 get_template_part('template-parts/products/product-tabs', null, [
-    'title' => __('Featured Products', 'fresh'),
+    'title' => __('Our Products', 'fresh'),
     'limit' => 50,
-    'featured_only' => true,
+]);
+?>
+<?php
+get_template_part('template-parts/products/product-grid', null, [
+    'title'        => __('Featured Products', 'fresh'),
+    'limit'        => 50,
+    'show_counter' => true,
 ]);
 ?>
 <?php //get_template_part('template-parts/home/counter'); ?>
