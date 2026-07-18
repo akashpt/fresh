@@ -5208,7 +5208,7 @@ ul.wp-block-latest-posts.is-grid.alignwide {
   overflow: hidden;
   width: 400px;
   height: 100vh;
-  padding: 20px 10px 20px 30px;
+  padding: 0px 10px 20px 30px;
   -webkit-transition: all .5s ease 0s;
   -o-transition: all .5s ease 0s;
   transition: all .5s ease 0s;
