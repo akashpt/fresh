@@ -551,6 +551,70 @@ border-radius: 10px;
   margin-left: 10px;
 }
 
+.fresh-product-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0;
+}
+
+.fresh-product-trust span {
+  background: #f0f8eb;
+  border: 1px solid #dbeccf;
+  border-radius: 999px;
+  color: #235c32;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 7px 11px;
+}
+
+.fresh-product-info-panels {
+  display: grid;
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.fresh-product-info-panels section {
+  border-top: 1px solid #e8efe3;
+  padding-top: 18px;
+}
+
+.fresh-product-info-panels h2 {
+  font-size: 20px;
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+
+.fresh-product-info-panels ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.fresh-product-info-panels li,
+.fresh-product-info-panels p {
+  color: #5f6d5b;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.fresh-product-info-panels details {
+  background: #fbfcf8;
+  border: 1px solid #e4eadc;
+  border-radius: 6px;
+  margin-top: 8px;
+  padding: 12px 14px;
+}
+
+.fresh-product-info-panels summary {
+  color: var(--ltn__heading-color);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.fresh-product-info-panels details p {
+  margin: 8px 0 0;
+}
+
 .fresh-update-cart-btn {
   background: var(--ltn__heading-color);
   border: 0;

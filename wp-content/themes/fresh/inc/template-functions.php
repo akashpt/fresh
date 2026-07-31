@@ -249,6 +249,7 @@ function fresh_document_title_parts($parts)
     return $ordered_parts;
 }
 add_filter('document_title_parts', 'fresh_document_title_parts');
+remove_action('wp_head', 'rel_canonical');
 
 function fresh_seo_trim_text($text, $length = 155)
 {
@@ -326,12 +327,39 @@ function fresh_seo_description()
     ));
 }
 
+function fresh_seo_current_route_slug()
+{
+    $request_path = isset($_SERVER['REQUEST_URI']) ? wp_parse_url(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])), PHP_URL_PATH) : '';
+    $home_path = wp_parse_url(home_url('/'), PHP_URL_PATH);
+
+    if ($home_path && strpos($request_path, $home_path) === 0) {
+        $request_path = substr($request_path, strlen($home_path));
+    }
+
+    return trim((string) $request_path, '/');
+}
+
+function fresh_seo_is_low_value_page()
+{
+    if (is_search() || is_404()) {
+        return true;
+    }
+
+    $route = fresh_seo_current_route_slug();
+
+    return in_array($route, ['cart', 'checkout', 'wishlist'], true);
+}
+
 function fresh_seo_canonical_url()
 {
     $product = fresh_document_title_product();
 
     if ($product && function_exists('fresh_product_detail_url')) {
         return fresh_product_detail_url($product->ID);
+    }
+
+    if (is_singular('fresh_product') && function_exists('fresh_product_detail_url')) {
+        return fresh_product_detail_url(get_the_ID());
     }
 
     if (is_singular()) {
@@ -379,7 +407,7 @@ function fresh_seo_output_meta()
     $image = fresh_seo_image_url();
     $site_name = get_bloginfo('name', 'display');
     $type = fresh_document_title_product() || is_singular('fresh_product') ? 'product' : 'website';
-    $noindex = isset($_GET['product_search']) || isset($_GET['sort']);
+    $noindex = fresh_seo_is_low_value_page() || isset($_GET['product_search']) || isset($_GET['sort']);
 
     if ($noindex) {
         echo '<meta name="robots" content="noindex,follow">' . "\n";
@@ -402,6 +430,80 @@ function fresh_seo_output_meta()
     printf('<meta name="twitter:image" content="%s">' . "\n", esc_url($image));
 }
 add_action('wp_head', 'fresh_seo_output_meta', 2);
+
+function fresh_seo_breadcrumb_schema($current_title = '')
+{
+    $items = [
+        [
+            '@type'    => 'ListItem',
+            'position' => 1,
+            'name'     => __('Home', 'fresh'),
+            'item'     => home_url('/'),
+        ],
+    ];
+
+    $product = fresh_document_title_product();
+
+    if ($product) {
+        $items[] = [
+            '@type'    => 'ListItem',
+            'position' => 2,
+            'name'     => __('Shop', 'fresh'),
+            'item'     => fresh_page_url('shop'),
+        ];
+        $items[] = [
+            '@type'    => 'ListItem',
+            'position' => 3,
+            'name'     => get_the_title($product),
+            'item'     => fresh_product_detail_url($product->ID),
+        ];
+    } elseif (is_singular()) {
+        $items[] = [
+            '@type'    => 'ListItem',
+            'position' => 2,
+            'name'     => get_the_title(),
+            'item'     => get_permalink(),
+        ];
+    } elseif (is_tax() || is_category() || is_tag()) {
+        $term = get_queried_object();
+        $term_link = $term ? get_term_link($term) : '';
+        $items[] = [
+            '@type'    => 'ListItem',
+            'position' => 2,
+            'name'     => $term ? $term->name : $current_title,
+            'item'     => is_wp_error($term_link) ? home_url('/') : $term_link,
+        ];
+    } elseif ($current_title) {
+        $items[] = [
+            '@type'    => 'ListItem',
+            'position' => 2,
+            'name'     => $current_title,
+            'item'     => fresh_seo_canonical_url(),
+        ];
+    }
+
+    return [
+        '@context'        => 'https://schema.org',
+        '@type'           => 'BreadcrumbList',
+        'itemListElement' => $items,
+    ];
+}
+
+function fresh_seo_local_business_schema()
+{
+    return [
+        '@context' => 'https://schema.org',
+        '@type'    => 'LocalBusiness',
+        'name'     => get_bloginfo('name', 'display'),
+        'url'      => home_url('/'),
+        'image'    => fresh_seo_image_url(),
+        'sameAs'   => [],
+        'areaServed' => [
+            '@type' => 'Country',
+            'name'  => 'India',
+        ],
+    ];
+}
 
 function fresh_seo_output_schema()
 {
@@ -428,6 +530,8 @@ function fresh_seo_output_schema()
 
     if ($product && function_exists('fresh_product_price') && function_exists('fresh_product_image_url')) {
         $price = fresh_product_price($product->ID);
+        $sku = get_post_meta($product->ID, '_fresh_product_sku', true);
+        $categories = get_the_terms($product->ID, 'fresh_product_category');
         $schema = [
             '@context'    => 'https://schema.org',
             '@type'       => 'Product',
@@ -443,11 +547,46 @@ function fresh_seo_output_schema()
                 'url'           => function_exists('fresh_product_detail_url') ? fresh_product_detail_url($product->ID) : get_permalink($product),
             ],
         ];
+
+        if ($sku) {
+            $schema['sku'] = $sku;
+        }
+
+        if (! is_wp_error($categories) && ! empty($categories)) {
+            $schema['category'] = implode(', ', wp_list_pluck($categories, 'name'));
+        }
+    }
+
+    $schemas = [$schema, fresh_seo_breadcrumb_schema(), fresh_seo_local_business_schema()];
+
+    if ($product) {
+        $schemas[] = [
+            '@context'   => 'https://schema.org',
+            '@type'      => 'FAQPage',
+            'mainEntity' => [
+                [
+                    '@type'          => 'Question',
+                    'name'           => __('How do I order this product?', 'fresh'),
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text'  => __('Choose the quantity, add it to cart, and complete checkout. Your order details can be sent on WhatsApp.', 'fresh'),
+                    ],
+                ],
+                [
+                    '@type'          => 'Question',
+                    'name'           => __('How should I store it?', 'fresh'),
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text'  => __('Store in a cool, dry place away from direct sunlight. Follow any storage instruction mentioned on the product pack.', 'fresh'),
+                    ],
+                ],
+            ],
+        ];
     }
 
     printf(
         '<script type="application/ld+json">%s</script>' . "\n",
-        wp_json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+        wp_json_encode($schemas, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
     );
 }
 add_action('wp_head', 'fresh_seo_output_schema', 20);
@@ -632,6 +771,17 @@ function fresh_static_route_template()
 }
 add_action('template_redirect', 'fresh_static_route_template', 0);
 
+function fresh_redirect_product_post_to_detail_url()
+{
+    if (! is_singular('fresh_product') || ! function_exists('fresh_product_detail_url')) {
+        return;
+    }
+
+    wp_safe_redirect(fresh_product_detail_url(get_the_ID()), 301);
+    exit;
+}
+add_action('template_redirect', 'fresh_redirect_product_post_to_detail_url', 1);
+
 function fresh_sitemap_url_entry($url, $modified = '', $changefreq = 'weekly', $priority = '0.6')
 {
     $modified = $modified ?: gmdate('Y-m-d H:i:s');
@@ -725,7 +875,6 @@ function fresh_render_sitemap_xml()
     fresh_sitemap_url_entry(home_url('/'), get_lastpostmodified('GMT'), 'daily', '1.0');
     fresh_sitemap_posts('page', 'monthly', '0.8');
     fresh_sitemap_posts('post', 'weekly', '0.7');
-    fresh_sitemap_posts('fresh_product', 'weekly', '0.8');
     fresh_sitemap_product_detail_urls();
     fresh_sitemap_terms('fresh_product_category', 'weekly', '0.6');
     fresh_sitemap_terms('category', 'weekly', '0.5');
@@ -738,7 +887,16 @@ add_action('template_redirect', 'fresh_render_sitemap_xml', -10);
 function fresh_add_sitemap_to_robots($output, $public)
 {
     if ($public) {
-        $output .= "\nSitemap: " . home_url('/sitemap.xml') . "\n";
+        $output .= "\nAllow: /wp-admin/admin-ajax.php\n";
+        $output .= "Disallow: /wp-admin/\n";
+        $output .= "Disallow: /cart/\n";
+        $output .= "Disallow: /checkout/\n";
+        $output .= "Disallow: /wishlist/\n";
+        $output .= "Disallow: /*?product_search=\n";
+        $output .= "Disallow: /*?sort=\n";
+        $output .= "Disallow: /*?fresh_add_to_cart=\n";
+        $output .= "Disallow: /*?fresh_add_to_wishlist=\n";
+        $output .= "Sitemap: " . home_url('/sitemap.xml') . "\n";
     }
 
     return $output;
