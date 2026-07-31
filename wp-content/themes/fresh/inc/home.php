@@ -7,16 +7,16 @@ function fresh_home_default($key)
 {
     $defaults = [
         'hero_1_subtitle' => '100% genuine Products',
-        'hero_1_title'    => "Farm Fresh, Naturally Pure",
-        'hero_1_text'     => 'Fresh organic products for your daily needs.',
+        'hero_1_title'    => "pureauranaturals, Naturally Pure",
+        'hero_1_text'     => 'pureauranaturals products for your daily needs.',
         'hero_1_image'    => get_template_directory_uri() . '/assets/img/slider/banner.png',
-        'hero_2_subtitle' => 'Fresh & organic',
+        'hero_2_subtitle' => 'pureauranaturals & organic',
         'hero_2_title'    => 'Tasty & Healthy Organic  ',
         'hero_2_text'     => 'Choose quality food from trusted local products.',
         'hero_2_image'    => get_template_directory_uri() . '/assets/img/slider/banner.png',
         'about_subtitle'  => 'Know More About Shop',
         'about_title'     => 'Trusted Organic Food Store',
-        'about_text'      => 'Add your store introduction from Appearance > Customize > Fresh Home.',
+        'about_text'      => 'Add your store introduction from Appearance > Customize > pureauranaturals Home.',
         'about_image'     => get_template_directory_uri() . '/assets/img/others/6.png',
         'cta_subtitle'    => 'Any question you have',
         'cta_title'       => '897-876-987-90',
@@ -78,7 +78,7 @@ function fresh_counter_number($key, $fallback)
 function fresh_register_home_customizer($wp_customize)
 {
     $wp_customize->add_section('fresh_home', [
-        'title'    => __('Fresh Home', 'fresh'),
+        'title'    => __('pureauranaturals Home', 'fresh'),
         'priority' => 30,
     ]);
 
@@ -125,8 +125,8 @@ add_action('customize_register', 'fresh_register_home_customizer');
 function fresh_register_home_admin_page()
 {
     add_theme_page(
-        __('Fresh Home Settings', 'fresh'),
-        __('Fresh Home', 'fresh'),
+        __('pureauranaturals Home Settings', 'fresh'),
+        __('pureauranaturals Home', 'fresh'),
         'manage_options',
         'fresh-home-settings',
         'fresh_render_home_admin_page'
@@ -228,7 +228,7 @@ function fresh_render_home_admin_page()
     }
     ?>
     <div class="wrap">
-        <h1><?php esc_html_e('Fresh Home Settings', 'fresh'); ?></h1>
+        <h1><?php esc_html_e('pureauranaturals Home Settings', 'fresh'); ?></h1>
         <form method="post" action="options.php">
             <?php
             settings_fields('fresh_home_settings');

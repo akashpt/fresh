@@ -3,7 +3,7 @@ $steps = [
     [
         'icon'  => 'fas fa-search',
         'title' => __('Browse products', 'fresh'),
-        'text'  => __('Find fresh essentials by category or featured picks.', 'fresh'),
+        'text'  => __('Find pureauranaturals essentials by category or featured picks.', 'fresh'),
     ],
     [
         'icon'  => 'fas fa-cart-plus',

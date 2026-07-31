@@ -1,6 +1,6 @@
 <?php
 /**
- * Fresh theme functions.
+ * pureauranaturals theme functions.
  *
  * Keep this file as a small loader. Theme setup, assets, and helpers live in
  * the inc directory so the custom theme stays easy to maintain.

@@ -21,7 +21,7 @@
     <div class="body-wrapper">
     <?php
     $fresh_marquee_messages = apply_filters('fresh_header_marquee_messages', [
-        __('Fresh daily essentials delivered with care', 'fresh'),
+        __('pureauranaturals daily essentials delivered with care', 'fresh'),
         __('Free shipping on eligible orders', 'fresh'),
         __('Secure checkout and quick WhatsApp ordering', 'fresh'),
     ]);

@@ -14,7 +14,7 @@ fresh_breadcrumb_banner(__('Page Not Found', 'fresh'));
             <div class="fresh-not-found-card">
                 <span class="fresh-not-found-code" aria-hidden="true"><?php esc_html_e('404', 'fresh'); ?></span>
                 <h1 id="fresh-error-title"><?php esc_html_e('This page is not available', 'fresh'); ?></h1>
-                <p><?php esc_html_e('The link may be old, moved, or typed incorrectly. You can continue shopping fresh products from here.', 'fresh'); ?></p>
+                <p><?php esc_html_e('The link may be old, moved, or typed incorrectly. You can continue shopping pureauranaturals products from here.', 'fresh'); ?></p>
 
                 <div class="fresh-not-found-actions">
                     <a class="theme-btn-1 btn btn-effect-1" href="<?php echo esc_url(home_url('/')); ?>">

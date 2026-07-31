@@ -35,3 +35,13 @@ function fresh_theme_setup()
     ]);
 }
 add_action('after_setup_theme', 'fresh_theme_setup');
+
+function fresh_set_default_brand_name()
+{
+    $site_name = trim((string) get_option('blogname'));
+
+    if ($site_name === '' || strcasecmp($site_name, 'fresh') === 0) {
+        update_option('blogname', 'pureauranaturals');
+    }
+}
+add_action('after_setup_theme', 'fresh_set_default_brand_name');

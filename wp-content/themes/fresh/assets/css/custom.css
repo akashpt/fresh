@@ -585,6 +585,12 @@ border-radius: 10px;
   margin-bottom: 10px;
 }
 
+.fresh-product-info-panels h3 {
+  font-size: 15px;
+  line-height: 1.35;
+  margin: 12px 0 4px;
+}
+
 .fresh-product-info-panels ul {
   margin: 0;
   padding-left: 18px;

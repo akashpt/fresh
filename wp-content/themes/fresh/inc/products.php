@@ -150,8 +150,8 @@ add_action('admin_init', 'fresh_register_whatsapp_settings');
 function fresh_whatsapp_settings_page()
 {
     add_options_page(
-        __('Fresh WhatsApp', 'fresh'),
-        __('Fresh WhatsApp', 'fresh'),
+        __('pureauranaturals WhatsApp', 'fresh'),
+        __('pureauranaturals WhatsApp', 'fresh'),
         'manage_options',
         'fresh-whatsapp',
         'fresh_render_whatsapp_settings_page'
@@ -168,7 +168,7 @@ function fresh_render_whatsapp_settings_page()
 {
     ?>
     <div class="wrap">
-        <h1><?php esc_html_e('Fresh WhatsApp Settings', 'fresh'); ?></h1>
+        <h1><?php esc_html_e('pureauranaturals WhatsApp Settings', 'fresh'); ?></h1>
         <form method="post" action="options.php">
             <?php settings_fields('fresh_whatsapp_settings'); ?>
             <table class="form-table" role="presentation">
@@ -264,12 +264,25 @@ function fresh_render_product_meta_box($post)
 {
     wp_nonce_field('fresh_save_product_meta', 'fresh_product_meta_nonce');
 
-    $price      = get_post_meta($post->ID, '_fresh_product_price', true);
-    $sale_price = get_post_meta($post->ID, '_fresh_product_sale_price', true);
-    $sku        = get_post_meta($post->ID, '_fresh_product_sku', true);
-    $unit       = get_post_meta($post->ID, '_fresh_product_unit', true);
-    $featured   = get_post_meta($post->ID, '_fresh_product_featured_front', true);
+    $price       = get_post_meta($post->ID, '_fresh_product_price', true);
+    $sale_price  = get_post_meta($post->ID, '_fresh_product_sale_price', true);
+    $sku         = get_post_meta($post->ID, '_fresh_product_sku', true);
+    $unit        = get_post_meta($post->ID, '_fresh_product_unit', true);
+    $featured    = get_post_meta($post->ID, '_fresh_product_featured_front', true);
     $front_order = get_post_meta($post->ID, '_fresh_product_front_order', true);
+    $seo_title   = get_post_meta($post->ID, '_fresh_product_seo_title', true);
+    $seo_desc    = get_post_meta($post->ID, '_fresh_product_seo_description', true);
+    $keyword     = get_post_meta($post->ID, '_fresh_product_focus_keyword', true);
+    $benefits    = get_post_meta($post->ID, '_fresh_product_benefits', true);
+    $ingredients = get_post_meta($post->ID, '_fresh_product_ingredients', true);
+    $how_to_use  = get_post_meta($post->ID, '_fresh_product_how_to_use', true);
+    $storage     = get_post_meta($post->ID, '_fresh_product_storage', true);
+    $shipping    = get_post_meta($post->ID, '_fresh_product_shipping', true);
+    $returns     = get_post_meta($post->ID, '_fresh_product_returns', true);
+    $faq_1_q     = get_post_meta($post->ID, '_fresh_product_faq_1_question', true);
+    $faq_1_a     = get_post_meta($post->ID, '_fresh_product_faq_1_answer', true);
+    $faq_2_q     = get_post_meta($post->ID, '_fresh_product_faq_2_question', true);
+    $faq_2_a     = get_post_meta($post->ID, '_fresh_product_faq_2_answer', true);
     ?>
     <p>
         <label for="fresh_product_price"><strong><?php esc_html_e('Price', 'fresh'); ?></strong></label><br>
@@ -286,6 +299,60 @@ function fresh_render_product_meta_box($post)
     <p>
         <label for="fresh_product_unit"><strong><?php esc_html_e('Unit', 'fresh'); ?></strong></label><br>
         <input type="text" id="fresh_product_unit" name="fresh_product_unit" value="<?php echo esc_attr($unit); ?>" placeholder="kg, box, piece" style="width: 100%;">
+    </p>
+    <hr>
+    <h3><?php esc_html_e('SEO and Conversion Content', 'fresh'); ?></h3>
+    <p>
+        <label for="fresh_product_seo_title"><strong><?php esc_html_e('SEO Title', 'fresh'); ?></strong></label><br>
+        <input type="text" id="fresh_product_seo_title" name="fresh_product_seo_title" value="<?php echo esc_attr($seo_title); ?>" style="width: 100%;" placeholder="<?php esc_attr_e('Pure Aura Naturals | Product Name', 'fresh'); ?>">
+    </p>
+    <p>
+        <label for="fresh_product_seo_description"><strong><?php esc_html_e('Meta Description', 'fresh'); ?></strong></label><br>
+        <textarea id="fresh_product_seo_description" name="fresh_product_seo_description" rows="3" style="width: 100%;"><?php echo esc_textarea($seo_desc); ?></textarea>
+    </p>
+    <p>
+        <label for="fresh_product_focus_keyword"><strong><?php esc_html_e('Focus Keyword', 'fresh'); ?></strong></label><br>
+        <input type="text" id="fresh_product_focus_keyword" name="fresh_product_focus_keyword" value="<?php echo esc_attr($keyword); ?>" style="width: 100%;" placeholder="<?php esc_attr_e('buy pure honey online', 'fresh'); ?>">
+    </p>
+    <p>
+        <label for="fresh_product_benefits"><strong><?php esc_html_e('Benefits', 'fresh'); ?></strong></label><br>
+        <textarea id="fresh_product_benefits" name="fresh_product_benefits" rows="4" style="width: 100%;" placeholder="<?php esc_attr_e('Add one benefit per line.', 'fresh'); ?>"><?php echo esc_textarea($benefits); ?></textarea>
+    </p>
+    <p>
+        <label for="fresh_product_ingredients"><strong><?php esc_html_e('Ingredients', 'fresh'); ?></strong></label><br>
+        <textarea id="fresh_product_ingredients" name="fresh_product_ingredients" rows="3" style="width: 100%;"><?php echo esc_textarea($ingredients); ?></textarea>
+    </p>
+    <p>
+        <label for="fresh_product_how_to_use"><strong><?php esc_html_e('How to Use', 'fresh'); ?></strong></label><br>
+        <textarea id="fresh_product_how_to_use" name="fresh_product_how_to_use" rows="3" style="width: 100%;"><?php echo esc_textarea($how_to_use); ?></textarea>
+    </p>
+    <p>
+        <label for="fresh_product_storage"><strong><?php esc_html_e('Storage Instructions', 'fresh'); ?></strong></label><br>
+        <textarea id="fresh_product_storage" name="fresh_product_storage" rows="3" style="width: 100%;"><?php echo esc_textarea($storage); ?></textarea>
+    </p>
+    <p>
+        <label for="fresh_product_shipping"><strong><?php esc_html_e('Shipping Details', 'fresh'); ?></strong></label><br>
+        <textarea id="fresh_product_shipping" name="fresh_product_shipping" rows="3" style="width: 100%;"><?php echo esc_textarea($shipping); ?></textarea>
+    </p>
+    <p>
+        <label for="fresh_product_returns"><strong><?php esc_html_e('Return Policy', 'fresh'); ?></strong></label><br>
+        <textarea id="fresh_product_returns" name="fresh_product_returns" rows="3" style="width: 100%;"><?php echo esc_textarea($returns); ?></textarea>
+    </p>
+    <p>
+        <label for="fresh_product_faq_1_question"><strong><?php esc_html_e('FAQ 1 Question', 'fresh'); ?></strong></label><br>
+        <input type="text" id="fresh_product_faq_1_question" name="fresh_product_faq_1_question" value="<?php echo esc_attr($faq_1_q); ?>" style="width: 100%;">
+    </p>
+    <p>
+        <label for="fresh_product_faq_1_answer"><strong><?php esc_html_e('FAQ 1 Answer', 'fresh'); ?></strong></label><br>
+        <textarea id="fresh_product_faq_1_answer" name="fresh_product_faq_1_answer" rows="3" style="width: 100%;"><?php echo esc_textarea($faq_1_a); ?></textarea>
+    </p>
+    <p>
+        <label for="fresh_product_faq_2_question"><strong><?php esc_html_e('FAQ 2 Question', 'fresh'); ?></strong></label><br>
+        <input type="text" id="fresh_product_faq_2_question" name="fresh_product_faq_2_question" value="<?php echo esc_attr($faq_2_q); ?>" style="width: 100%;">
+    </p>
+    <p>
+        <label for="fresh_product_faq_2_answer"><strong><?php esc_html_e('FAQ 2 Answer', 'fresh'); ?></strong></label><br>
+        <textarea id="fresh_product_faq_2_answer" name="fresh_product_faq_2_answer" rows="3" style="width: 100%;"><?php echo esc_textarea($faq_2_a); ?></textarea>
     </p>
     <hr>
     <p>
@@ -324,6 +391,19 @@ function fresh_save_product_meta($post_id)
         '_fresh_product_sale_price' => 'fresh_product_sale_price',
         '_fresh_product_sku'        => 'fresh_product_sku',
         '_fresh_product_unit'       => 'fresh_product_unit',
+        '_fresh_product_seo_title'       => 'fresh_product_seo_title',
+        '_fresh_product_seo_description' => 'fresh_product_seo_description',
+        '_fresh_product_focus_keyword'   => 'fresh_product_focus_keyword',
+        '_fresh_product_benefits'        => 'fresh_product_benefits',
+        '_fresh_product_ingredients'     => 'fresh_product_ingredients',
+        '_fresh_product_how_to_use'      => 'fresh_product_how_to_use',
+        '_fresh_product_storage'         => 'fresh_product_storage',
+        '_fresh_product_shipping'        => 'fresh_product_shipping',
+        '_fresh_product_returns'         => 'fresh_product_returns',
+        '_fresh_product_faq_1_question'  => 'fresh_product_faq_1_question',
+        '_fresh_product_faq_1_answer'    => 'fresh_product_faq_1_answer',
+        '_fresh_product_faq_2_question'  => 'fresh_product_faq_2_question',
+        '_fresh_product_faq_2_answer'    => 'fresh_product_faq_2_answer',
     ];
 
     foreach ($fields as $meta_key => $field_name) {
@@ -848,6 +928,51 @@ function fresh_product_price($product_id)
 function fresh_format_price($price)
 {
     return '₹' . number_format((float) $price, 2);
+}
+
+function fresh_product_meta_text($product_id, $key)
+{
+    return trim((string) get_post_meta($product_id, $key, true));
+}
+
+function fresh_product_meta_lines($product_id, $key)
+{
+    $value = fresh_product_meta_text($product_id, $key);
+
+    if ($value === '') {
+        return [];
+    }
+
+    return array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $value))));
+}
+
+function fresh_product_faqs($product_id)
+{
+    $fallbacks = [
+        [
+            'question' => __('How do I order this product?', 'fresh'),
+            'answer'   => __('Choose the quantity, add it to cart, and complete checkout. Your order details can be sent on WhatsApp.', 'fresh'),
+        ],
+        [
+            'question' => __('How should I store it?', 'fresh'),
+            'answer'   => __('Store in a cool, dry place away from direct sunlight. Follow any storage instruction mentioned on the product pack.', 'fresh'),
+        ],
+    ];
+    $faqs = [];
+
+    for ($i = 1; $i <= 2; $i++) {
+        $question = fresh_product_meta_text($product_id, '_fresh_product_faq_' . $i . '_question');
+        $answer = fresh_product_meta_text($product_id, '_fresh_product_faq_' . $i . '_answer');
+
+        if ($question && $answer) {
+            $faqs[] = [
+                'question' => $question,
+                'answer'   => $answer,
+            ];
+        }
+    }
+
+    return $faqs ?: $fallbacks;
 }
 
 function fresh_trim_product_title($product, $length = 35)

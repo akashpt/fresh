@@ -225,7 +225,8 @@ function fresh_document_title_parts($parts)
     $product = fresh_document_title_product();
 
     if ($product) {
-        $page_title = get_the_title($product);
+        $seo_title = get_post_meta($product->ID, '_fresh_product_seo_title', true);
+        $page_title = $seo_title ?: get_the_title($product);
     }
 
     if (is_front_page()) {
@@ -277,14 +278,15 @@ function fresh_seo_description()
     $product = fresh_document_title_product();
 
     if ($product) {
-        $description = $product->post_excerpt ?: $product->post_content;
+        $description = get_post_meta($product->ID, '_fresh_product_seo_description', true);
+        $description = $description ?: ($product->post_excerpt ?: $product->post_content);
 
         if ($description) {
             return fresh_seo_trim_text($description);
         }
 
         return fresh_seo_trim_text(sprintf(
-            __('Order %1$s from %2$s. Fresh products, easy cart ordering, and quick checkout.', 'fresh'),
+            __('Order %1$s from %2$s. pureauranaturals products, easy cart ordering, and quick checkout.', 'fresh'),
             get_the_title($product),
             $site_name
         ));
@@ -309,20 +311,20 @@ function fresh_seo_description()
 
     if (is_search()) {
         return fresh_seo_trim_text(sprintf(
-            __('Search fresh products and everyday essentials at %s.', 'fresh'),
+            __('Search pureauranaturals products and everyday essentials at %s.', 'fresh'),
             $site_name
         ));
     }
 
     if (is_front_page()) {
         return fresh_seo_trim_text($tagline ?: sprintf(
-            __('Shop fresh products, natural essentials, and daily favorites from %s.', 'fresh'),
+            __('Shop pureauranaturals products, natural essentials, and daily favorites from %s.', 'fresh'),
             $site_name
         ));
     }
 
     return fresh_seo_trim_text(sprintf(
-        __('Browse fresh products, compare prices, add items to cart, and place orders with %s.', 'fresh'),
+        __('Browse pureauranaturals products, compare prices, add items to cart, and place orders with %s.', 'fresh'),
         $site_name
     ));
 }
@@ -532,6 +534,7 @@ function fresh_seo_output_schema()
         $price = fresh_product_price($product->ID);
         $sku = get_post_meta($product->ID, '_fresh_product_sku', true);
         $categories = get_the_terms($product->ID, 'fresh_product_category');
+        $ingredients = get_post_meta($product->ID, '_fresh_product_ingredients', true);
         $schema = [
             '@context'    => 'https://schema.org',
             '@type'       => 'Product',
@@ -555,32 +558,33 @@ function fresh_seo_output_schema()
         if (! is_wp_error($categories) && ! empty($categories)) {
             $schema['category'] = implode(', ', wp_list_pluck($categories, 'name'));
         }
+
+        if ($ingredients) {
+            $schema['material'] = $ingredients;
+        }
     }
 
     $schemas = [$schema, fresh_seo_breadcrumb_schema(), fresh_seo_local_business_schema()];
 
     if ($product) {
+        $faq_items = function_exists('fresh_product_faqs') ? fresh_product_faqs($product->ID) : [];
+        $main_entity = [];
+
+        foreach ($faq_items as $faq) {
+            $main_entity[] = [
+                '@type'          => 'Question',
+                'name'           => $faq['question'],
+                'acceptedAnswer' => [
+                    '@type' => 'Answer',
+                    'text'  => $faq['answer'],
+                ],
+            ];
+        }
+
         $schemas[] = [
             '@context'   => 'https://schema.org',
             '@type'      => 'FAQPage',
-            'mainEntity' => [
-                [
-                    '@type'          => 'Question',
-                    'name'           => __('How do I order this product?', 'fresh'),
-                    'acceptedAnswer' => [
-                        '@type' => 'Answer',
-                        'text'  => __('Choose the quantity, add it to cart, and complete checkout. Your order details can be sent on WhatsApp.', 'fresh'),
-                    ],
-                ],
-                [
-                    '@type'          => 'Question',
-                    'name'           => __('How should I store it?', 'fresh'),
-                    'acceptedAnswer' => [
-                        '@type' => 'Answer',
-                        'text'  => __('Store in a cool, dry place away from direct sunlight. Follow any storage instruction mentioned on the product pack.', 'fresh'),
-                    ],
-                ],
-            ],
+            'mainEntity' => $main_entity,
         ];
     }
 
@@ -604,8 +608,8 @@ add_action('admin_init', 'fresh_register_logo_setting');
 function fresh_logo_admin_menu()
 {
     add_theme_page(
-        __('Fresh Logo', 'fresh'),
-        __('Fresh Logo', 'fresh'),
+        __('pureauranaturals Logo', 'fresh'),
+        __('pureauranaturals Logo', 'fresh'),
         'manage_options',
         'fresh-logo',
         'fresh_render_logo_admin_page'
@@ -629,7 +633,7 @@ function fresh_render_logo_admin_page()
     $logo_url = $logo_id ? wp_get_attachment_image_url($logo_id, 'medium') : '';
     ?>
     <div class="wrap">
-        <h1><?php esc_html_e('Fresh Logo', 'fresh'); ?></h1>
+        <h1><?php esc_html_e('pureauranaturals Logo', 'fresh'); ?></h1>
         <p><?php esc_html_e('Upload or select your header logo here. This uploader does not crop the image.', 'fresh'); ?></p>
         <form method="post" action="options.php">
             <?php settings_fields('fresh_logo_settings'); ?>
@@ -832,6 +836,75 @@ function fresh_sitemap_product_detail_urls()
     }
 }
 
+function fresh_render_merchant_feed_xml()
+{
+    if (! isset($_SERVER['REQUEST_URI']) || ! function_exists('fresh_product_price') || ! function_exists('fresh_product_image_url')) {
+        return;
+    }
+
+    $request_path = wp_parse_url(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])), PHP_URL_PATH);
+    $home_path = wp_parse_url(home_url('/'), PHP_URL_PATH);
+
+    if ($home_path && strpos($request_path, $home_path) === 0) {
+        $request_path = substr($request_path, strlen($home_path));
+    }
+
+    if (trim((string) $request_path, '/') !== 'google-merchant-feed.xml') {
+        return;
+    }
+
+    $products = get_posts([
+        'post_type'      => 'fresh_product',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'orderby'        => 'modified',
+        'order'          => 'DESC',
+        'no_found_rows'  => true,
+    ]);
+
+    status_header(200);
+    nocache_headers();
+    header('Content-Type: application/xml; charset=' . get_bloginfo('charset'));
+
+    echo '<?xml version="1.0" encoding="' . esc_attr(get_bloginfo('charset')) . '"?>' . "\n";
+    echo '<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">' . "\n";
+    echo '<channel>' . "\n";
+    echo '<title>' . esc_html(get_bloginfo('name', 'display')) . '</title>' . "\n";
+    echo '<link>' . esc_url(home_url('/')) . '</link>' . "\n";
+    echo '<description>' . esc_html(fresh_seo_trim_text(get_bloginfo('description', 'display') ?: get_bloginfo('name', 'display'))) . '</description>' . "\n";
+
+    foreach ($products as $product) {
+        $price = fresh_product_price($product->ID);
+        $description = get_post_meta($product->ID, '_fresh_product_seo_description', true);
+        $description = $description ?: ($product->post_excerpt ?: $product->post_content);
+        $sku = get_post_meta($product->ID, '_fresh_product_sku', true);
+        $categories = get_the_terms($product->ID, 'fresh_product_category');
+        $category_names = ! is_wp_error($categories) && $categories ? implode(' > ', wp_list_pluck($categories, 'name')) : '';
+
+        echo '<item>' . "\n";
+        echo '<g:id>' . esc_html($sku ?: $product->ID) . '</g:id>' . "\n";
+        echo '<g:title>' . esc_html(get_the_title($product)) . '</g:title>' . "\n";
+        echo '<g:description>' . esc_html(fresh_seo_trim_text($description, 500)) . '</g:description>' . "\n";
+        echo '<g:link>' . esc_url(fresh_product_detail_url($product->ID)) . '</g:link>' . "\n";
+        echo '<g:image_link>' . esc_url(fresh_product_image_url($product->ID, 'large')) . '</g:image_link>' . "\n";
+        echo '<g:availability>in_stock</g:availability>' . "\n";
+        echo '<g:price>' . esc_html(number_format((float) $price, 2, '.', '') . ' INR') . '</g:price>' . "\n";
+        echo '<g:brand>' . esc_html(get_bloginfo('name', 'display')) . '</g:brand>' . "\n";
+        echo '<g:condition>new</g:condition>' . "\n";
+
+        if ($category_names) {
+            echo '<g:product_type>' . esc_html($category_names) . '</g:product_type>' . "\n";
+        }
+
+        echo '</item>' . "\n";
+    }
+
+    echo '</channel>' . "\n";
+    echo '</rss>';
+    exit;
+}
+add_action('template_redirect', 'fresh_render_merchant_feed_xml', -11);
+
 function fresh_sitemap_terms($taxonomy, $changefreq = 'weekly', $priority = '0.5')
 {
     $terms = get_terms([
@@ -896,6 +969,7 @@ function fresh_add_sitemap_to_robots($output, $public)
         $output .= "Disallow: /*?sort=\n";
         $output .= "Disallow: /*?fresh_add_to_cart=\n";
         $output .= "Disallow: /*?fresh_add_to_wishlist=\n";
+        $output .= "Sitemap: " . home_url('/google-merchant-feed.xml') . "\n";
         $output .= "Sitemap: " . home_url('/sitemap.xml') . "\n";
     }
 

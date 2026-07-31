@@ -52,7 +52,7 @@ fresh_breadcrumb_banner(__('Contact', 'fresh'));
                 <div class="fresh-contact-help">
                     <span><?php esc_html_e('Order support', 'fresh'); ?></span>
                     <h2><?php esc_html_e('Need help choosing products?', 'fresh'); ?></h2>
-                    <p><?php esc_html_e('Tell us what you are looking for and we will help you find the right fresh products, quantity, and delivery option.', 'fresh'); ?></p>
+                    <p><?php esc_html_e('Tell us what you are looking for and we will help you find the right pureauranaturals products, quantity, and delivery option.', 'fresh'); ?></p>
                     <ul>
                         <li><i class="fas fa-check"></i><?php esc_html_e('Product and availability questions', 'fresh'); ?></li>
                         <li><i class="fas fa-check"></i><?php esc_html_e('Delivery and order support', 'fresh'); ?></li>

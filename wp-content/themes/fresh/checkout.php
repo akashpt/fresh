@@ -54,7 +54,7 @@ fresh_breadcrumb_banner(__('Checkout', 'fresh'), __('Complete your order', 'fres
                     </script>
                 <?php else : ?>
                     <div class="alert alert-warning">
-                        <?php esc_html_e('WhatsApp number is not set. Go to Settings > Fresh WhatsApp and add your number.', 'fresh'); ?>
+                        <?php esc_html_e('WhatsApp number is not set. Go to Settings > pureauranaturals WhatsApp and add your number.', 'fresh'); ?>
                     </div>
                     <a class="theme-btn-1 btn btn-effect-1" href="<?php echo esc_url(fresh_page_url('shop')); ?>"><?php esc_html_e('Continue Shopping', 'fresh'); ?></a>
                 <?php endif; ?>

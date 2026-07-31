@@ -9,6 +9,13 @@ $price = fresh_product_price($product->ID);
 $unit  = get_post_meta($product->ID, '_fresh_product_unit', true);
 $sku   = get_post_meta($product->ID, '_fresh_product_sku', true);
 $product_image_url = fresh_product_image_url($product->ID, 'large');
+$benefits = function_exists('fresh_product_meta_lines') ? fresh_product_meta_lines($product->ID, '_fresh_product_benefits') : [];
+$ingredients = function_exists('fresh_product_meta_text') ? fresh_product_meta_text($product->ID, '_fresh_product_ingredients') : '';
+$how_to_use = function_exists('fresh_product_meta_text') ? fresh_product_meta_text($product->ID, '_fresh_product_how_to_use') : '';
+$storage = function_exists('fresh_product_meta_text') ? fresh_product_meta_text($product->ID, '_fresh_product_storage') : '';
+$shipping = function_exists('fresh_product_meta_text') ? fresh_product_meta_text($product->ID, '_fresh_product_shipping') : '';
+$returns = function_exists('fresh_product_meta_text') ? fresh_product_meta_text($product->ID, '_fresh_product_returns') : '';
+$faqs = function_exists('fresh_product_faqs') ? fresh_product_faqs($product->ID) : [];
 ?>
 
 <main id="primary" class="site-main">
@@ -37,7 +44,7 @@ $product_image_url = fresh_product_image_url($product->ID, 'large');
                         </div>
 
                         <div class="fresh-product-trust">
-                            <span><?php esc_html_e('Freshly packed', 'fresh'); ?></span>
+                            <span><?php esc_html_e('pureauranaturals packed', 'fresh'); ?></span>
                             <span><?php esc_html_e('WhatsApp order support', 'fresh'); ?></span>
                             <span><?php esc_html_e('Quality checked', 'fresh'); ?></span>
                         </div>
@@ -62,26 +69,50 @@ $product_image_url = fresh_product_image_url($product->ID, 'large');
                         <div class="fresh-product-info-panels">
                             <section>
                                 <h2><?php esc_html_e('Why customers choose it', 'fresh'); ?></h2>
-                                <ul>
-                                    <li><?php esc_html_e('Selected for everyday freshness and value.', 'fresh'); ?></li>
-                                    <li><?php esc_html_e('Easy quantity selection before adding to cart.', 'fresh'); ?></li>
-                                    <li><?php esc_html_e('Order confirmation can be sent quickly through WhatsApp.', 'fresh'); ?></li>
-                                </ul>
+                                <?php if ($benefits) : ?>
+                                    <ul>
+                                        <?php foreach ($benefits as $benefit) : ?>
+                                            <li><?php echo esc_html($benefit); ?></li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php else : ?>
+                                    <ul>
+                                        <li><?php esc_html_e('Selected for everyday freshness and value.', 'fresh'); ?></li>
+                                        <li><?php esc_html_e('Easy quantity selection before adding to cart.', 'fresh'); ?></li>
+                                        <li><?php esc_html_e('Order confirmation can be sent quickly through WhatsApp.', 'fresh'); ?></li>
+                                    </ul>
+                                <?php endif; ?>
                             </section>
+                            <?php if ($ingredients || $how_to_use || $storage) : ?>
+                                <section>
+                                    <h2><?php esc_html_e('Product details', 'fresh'); ?></h2>
+                                    <?php if ($ingredients) : ?>
+                                        <h3><?php esc_html_e('Ingredients', 'fresh'); ?></h3>
+                                        <p><?php echo esc_html($ingredients); ?></p>
+                                    <?php endif; ?>
+                                    <?php if ($how_to_use) : ?>
+                                        <h3><?php esc_html_e('How to use', 'fresh'); ?></h3>
+                                        <p><?php echo esc_html($how_to_use); ?></p>
+                                    <?php endif; ?>
+                                    <?php if ($storage) : ?>
+                                        <h3><?php esc_html_e('Storage', 'fresh'); ?></h3>
+                                        <p><?php echo esc_html($storage); ?></p>
+                                    <?php endif; ?>
+                                </section>
+                            <?php endif; ?>
                             <section>
                                 <h2><?php esc_html_e('Shipping and returns', 'fresh'); ?></h2>
-                                <p><?php esc_html_e('Delivery details are confirmed after checkout. If an item arrives damaged or incorrect, contact support with your order details for quick help.', 'fresh'); ?></p>
+                                <p><?php echo esc_html($shipping ?: __('Delivery details are confirmed after checkout.', 'fresh')); ?></p>
+                                <p><?php echo esc_html($returns ?: __('If an item arrives damaged or incorrect, contact support with your order details for quick help.', 'fresh')); ?></p>
                             </section>
                             <section>
                                 <h2><?php esc_html_e('Product FAQs', 'fresh'); ?></h2>
-                                <details>
-                                    <summary><?php esc_html_e('How do I order this product?', 'fresh'); ?></summary>
-                                    <p><?php esc_html_e('Choose the quantity, add it to cart, and complete checkout. Your order details can be sent on WhatsApp.', 'fresh'); ?></p>
-                                </details>
-                                <details>
-                                    <summary><?php esc_html_e('How should I store it?', 'fresh'); ?></summary>
-                                    <p><?php esc_html_e('Store in a cool, dry place away from direct sunlight. Follow any storage instruction mentioned on the product pack.', 'fresh'); ?></p>
-                                </details>
+                                <?php foreach ($faqs as $faq) : ?>
+                                    <details>
+                                        <summary><?php echo esc_html($faq['question']); ?></summary>
+                                        <p><?php echo esc_html($faq['answer']); ?></p>
+                                    </details>
+                                <?php endforeach; ?>
                             </section>
                         </div>
                     </div>

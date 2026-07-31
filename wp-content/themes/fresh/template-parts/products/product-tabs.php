@@ -59,7 +59,7 @@ if (! is_wp_error($terms)) {
         <div class="row">
             <div class="col-lg-12">
                 <div class="section-title-area ltn__section-title-2 text-center fresh-products-heading">
-                    <span class="fresh-section-kicker"><?php esc_html_e('Fresh Picks', 'fresh'); ?></span>
+                    <span class="fresh-section-kicker"><?php esc_html_e('pureauranaturals Picks', 'fresh'); ?></span>
                     <h1 class="section-title"><?php echo esc_html($title); ?></h1>
                     <p><?php esc_html_e('Simple everyday favorites, organized by category and ready for quick ordering.', 'fresh'); ?></p>
                 </div>
