@@ -520,8 +520,26 @@ border-radius: 10px;
   width: auto;
 }
 
+.site-logo .fresh-site-title {
+  color: #0f172a;
+  display: inline-flex;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+  max-width: 220px;
+  text-decoration: none;
+}
+
+.site-logo .fresh-site-title:hover {
+  color: #80b500;
+}
+
 .ltn__utilize-mobile-menu .site-logo .custom-logo {
   max-height: 64px;
+}
+
+.ltn__utilize-mobile-menu .site-logo .fresh-site-title {
+  font-size: 24px;
 }
 
 .fresh-cart-added {
@@ -964,6 +982,11 @@ border: 1px solid #e2e2e2;
   font-weight: 700;
 }
 
+.fresh-shop-search-form {
+  margin-bottom: 20px;
+}
+
+.fresh-shop-search-form label,
 .fresh-shop-sort-form label {
   color: var(--ltn__heading-color);
   display: block;
@@ -972,6 +995,38 @@ border: 1px solid #e2e2e2;
   letter-spacing: 0;
   margin-bottom: 10px;
   text-transform: uppercase;
+}
+
+.fresh-shop-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 46px;
+}
+
+.fresh-shop-search-row input {
+  background: #fff;
+  border: 1px solid #dfe5d8;
+  border-radius: 6px 0 0 6px;
+  color: var(--ltn__heading-color);
+  height: 46px;
+  padding: 0 14px;
+  width: 100%;
+}
+
+.fresh-shop-search-row button {
+  align-items: center;
+  background: var(--ltn__secondary-color);
+  border: 0;
+  border-radius: 0 6px 6px 0;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  height: 46px;
+  justify-content: center;
+}
+
+.fresh-shop-search-row button:hover,
+.fresh-shop-search-row button:focus {
+  background: var(--ltn__heading-color);
 }
 
 .fresh-shop-category-panel {
@@ -2577,6 +2632,15 @@ border: 1px solid #e2e2e2;
 
   .fresh-shop-category-panel {
     margin-bottom: 14px;
+  }
+
+  .fresh-shop-search-form {
+    margin-bottom: 14px;
+  }
+
+  .fresh-shop-search-row input,
+  .fresh-shop-search-row button {
+    height: 42px;
   }
 
   .fresh-shop-category-panel summary {

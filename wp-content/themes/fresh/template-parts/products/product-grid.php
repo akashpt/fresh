@@ -1,10 +1,12 @@
 <?php
 $title = isset($args['title']) ? $args['title'] : __('Products', 'fresh');
-$limit = isset($args['limit']) ? absint($args['limit']) : 8;
+$limit = isset($args['limit']) ? (int) $args['limit'] : 8;
+$limit = $limit === -1 ? -1 : max(1, $limit);
 $show_counter = ! empty($args['show_counter']);
 $show_filters = ! empty($args['show_filters']);
 $selected_category = ! empty($_GET['category']) ? sanitize_title(wp_unslash($_GET['category'])) : '';
 $selected_sort = ! empty($_GET['sort']) ? sanitize_key(wp_unslash($_GET['sort'])) : 'latest';
+$selected_search = ! empty($_GET['product_search']) ? sanitize_text_field(wp_unslash($_GET['product_search'])) : '';
 $shop_url = fresh_page_url('shop');
 
 $query_args = [
@@ -12,6 +14,10 @@ $query_args = [
     'post_status'    => 'publish',
     'posts_per_page' => $limit,
 ];
+
+if ($selected_search) {
+    $query_args['s'] = $selected_search;
+}
 
 if ($selected_category) {
     $query_args['tax_query'] = [
@@ -88,10 +94,26 @@ $sort_options = [
                 <aside class="fresh-shop-options" aria-label="<?php esc_attr_e('Shop filters', 'fresh'); ?>">
                     <div class="fresh-shop-options-head">
                         <span><?php esc_html_e('Filters', 'fresh'); ?></span>
-                        <?php if ($selected_category || $selected_sort !== 'latest') : ?>
+                        <?php if ($selected_search || $selected_category || $selected_sort !== 'latest') : ?>
                             <a href="<?php echo esc_url($shop_url); ?>"><?php esc_html_e('Clear', 'fresh'); ?></a>
                         <?php endif; ?>
                     </div>
+
+                    <form class="fresh-shop-search-form" action="<?php echo esc_url($shop_url); ?>" method="get" role="search">
+                        <?php if ($selected_category) : ?>
+                            <input type="hidden" name="category" value="<?php echo esc_attr($selected_category); ?>">
+                        <?php endif; ?>
+                        <?php if ($selected_sort !== 'latest') : ?>
+                            <input type="hidden" name="sort" value="<?php echo esc_attr($selected_sort); ?>">
+                        <?php endif; ?>
+                        <label for="fresh-product-search"><?php esc_html_e('Search Products', 'fresh'); ?></label>
+                        <div class="fresh-shop-search-row">
+                            <input id="fresh-product-search" type="search" name="product_search" value="<?php echo esc_attr($selected_search); ?>" placeholder="<?php esc_attr_e('Search Ghee, oils, Malt...', 'fresh'); ?>">
+                            <button type="submit" aria-label="<?php esc_attr_e('Search products', 'fresh'); ?>">
+                                <i class="fas fa-search" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </form>
 
                     <details class="fresh-shop-category-panel">
                         <summary>
@@ -102,17 +124,21 @@ $sort_options = [
                            
                         </summary>
                         <div class="fresh-shop-category-list">
-                            <a class="<?php echo $selected_category ? '' : 'is-active'; ?>" href="<?php echo esc_url(add_query_arg('sort', $selected_sort, $shop_url)); ?>">
+                            <a class="<?php echo $selected_category ? '' : 'is-active'; ?>" href="<?php echo esc_url(add_query_arg(array_filter([
+                                'sort'           => $selected_sort !== 'latest' ? $selected_sort : '',
+                                'product_search' => $selected_search,
+                            ]), $shop_url)); ?>">
                                 <span><?php esc_html_e('All Products', 'fresh'); ?></span>
                                 <small><?php echo esc_html($all_products_count); ?></small>
                             </a>
                             <?php if (! is_wp_error($categories)) : ?>
                                 <?php foreach ($categories as $category) : ?>
                                     <?php
-                                    $category_url = add_query_arg([
+                                    $category_url = add_query_arg(array_filter([
                                         'category' => $category->slug,
-                                        'sort'     => $selected_sort,
-                                    ], $shop_url);
+                                        'sort'     => $selected_sort !== 'latest' ? $selected_sort : '',
+                                        'product_search' => $selected_search,
+                                    ]), $shop_url);
                                     ?>
                                     <a class="<?php echo $selected_category === $category->slug ? 'is-active' : ''; ?>" href="<?php echo esc_url($category_url); ?>">
                                         <span><?php echo esc_html($category->name); ?></span>
@@ -126,6 +152,9 @@ $sort_options = [
                     <form class="fresh-shop-sort-form" action="<?php echo esc_url($shop_url); ?>" method="get">
                         <?php if ($selected_category) : ?>
                             <input type="hidden" name="category" value="<?php echo esc_attr($selected_category); ?>">
+                        <?php endif; ?>
+                        <?php if ($selected_search) : ?>
+                            <input type="hidden" name="product_search" value="<?php echo esc_attr($selected_search); ?>">
                         <?php endif; ?>
                         <label for="fresh-shop-sort"><?php esc_html_e('Sort By', 'fresh'); ?></label>
                         <div class="fresh-shop-sort-row">
@@ -148,8 +177,11 @@ $sort_options = [
                         <div>
                             <strong><?php echo esc_html($products->found_posts); ?></strong>
                             <span><?php esc_html_e('items found', 'fresh'); ?></span>
+                            <?php if ($selected_search) : ?>
+                                <span><?php echo esc_html(sprintf(__('for "%s"', 'fresh'), $selected_search)); ?></span>
+                            <?php endif; ?>
                         </div>
-                        <span><?php echo esc_html($sort_options[$selected_sort]); ?></span>
+                        <span><?php echo esc_html($sort_options[$selected_sort]); ?><?php echo $selected_category ? ' / ' . esc_html($selected_category_label) : ''; ?></span>
                     </div>
                 <?php endif; ?>
 
@@ -174,7 +206,8 @@ $sort_options = [
                         ?>
                     <?php else : ?>
                         <div class="col-12 fresh-product-empty">
-                            <p><?php esc_html_e('No products found. Try another category or sorting option.', 'fresh'); ?></p>
+                            <p><?php esc_html_e('No products found. Try another search word, category, or sorting option.', 'fresh'); ?></p>
+                            <a class="theme-btn-1 btn btn-effect-1" href="<?php echo esc_url($shop_url); ?>"><?php esc_html_e('View All Products', 'fresh'); ?></a>
                         </div>
                     <?php endif; ?>
                 </div>

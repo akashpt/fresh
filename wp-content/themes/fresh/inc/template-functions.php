@@ -186,15 +186,271 @@ function fresh_site_logo()
     }
 
     printf(
-        '<a href="%s"><img %s></a>',
+        '<a href="%s" class="fresh-site-title" rel="home">%s</a>',
         esc_url(home_url('/')),
-        fresh_image_attrs(fresh_default_logo_url(), get_bloginfo('name'), [
-            'class'           => 'custom-logo fresh-theme-logo',
-            'fallback_width'  => 220,
-            'fallback_height' => 80,
-        ])
+        esc_html(get_bloginfo('name'))
     );
 }
+
+function fresh_document_title_separator($separator)
+{
+    return '|';
+}
+add_filter('document_title_separator', 'fresh_document_title_separator');
+
+function fresh_document_title_product()
+{
+    if (empty($_GET['product'])) {
+        return null;
+    }
+
+    $product_id = absint(wp_unslash($_GET['product']));
+    $product = $product_id ? get_post($product_id) : null;
+
+    if (! $product || $product->post_type !== 'fresh_product' || $product->post_status !== 'publish') {
+        return null;
+    }
+
+    return $product;
+}
+
+function fresh_document_title_parts($parts)
+{
+    if (is_admin()) {
+        return $parts;
+    }
+
+    $site_title = get_bloginfo('name', 'display');
+    $page_title = isset($parts['title']) ? $parts['title'] : '';
+    $product = fresh_document_title_product();
+
+    if ($product) {
+        $page_title = get_the_title($product);
+    }
+
+    if (is_front_page()) {
+        return [
+            'site' => $site_title,
+        ];
+    }
+
+    $ordered_parts = [
+        'site' => $site_title,
+    ];
+
+    if ($page_title && strcasecmp($page_title, $site_title) !== 0) {
+        $ordered_parts['title'] = $page_title;
+    }
+
+    if (! empty($parts['page'])) {
+        $ordered_parts['page'] = $parts['page'];
+    }
+
+    return $ordered_parts;
+}
+add_filter('document_title_parts', 'fresh_document_title_parts');
+
+function fresh_seo_trim_text($text, $length = 155)
+{
+    $text = trim(preg_replace('/\s+/', ' ', wp_strip_all_tags((string) $text)));
+
+    if ($text === '') {
+        return '';
+    }
+
+    if (function_exists('mb_strlen') && mb_strlen($text) > $length) {
+        return rtrim(mb_substr($text, 0, $length - 1)) . '...';
+    }
+
+    if (strlen($text) > $length) {
+        return rtrim(substr($text, 0, $length - 1)) . '...';
+    }
+
+    return $text;
+}
+
+function fresh_seo_description()
+{
+    $site_name = get_bloginfo('name', 'display');
+    $tagline = get_bloginfo('description', 'display');
+    $product = fresh_document_title_product();
+
+    if ($product) {
+        $description = $product->post_excerpt ?: $product->post_content;
+
+        if ($description) {
+            return fresh_seo_trim_text($description);
+        }
+
+        return fresh_seo_trim_text(sprintf(
+            __('Order %1$s from %2$s. Fresh products, easy cart ordering, and quick checkout.', 'fresh'),
+            get_the_title($product),
+            $site_name
+        ));
+    }
+
+    if (is_singular()) {
+        $post = get_post();
+        $description = has_excerpt($post) ? get_the_excerpt($post) : $post->post_content;
+
+        if ($description) {
+            return fresh_seo_trim_text($description);
+        }
+    }
+
+    if (is_tax() || is_category() || is_tag()) {
+        $term_description = term_description();
+
+        if ($term_description) {
+            return fresh_seo_trim_text($term_description);
+        }
+    }
+
+    if (is_search()) {
+        return fresh_seo_trim_text(sprintf(
+            __('Search fresh products and everyday essentials at %s.', 'fresh'),
+            $site_name
+        ));
+    }
+
+    if (is_front_page()) {
+        return fresh_seo_trim_text($tagline ?: sprintf(
+            __('Shop fresh products, natural essentials, and daily favorites from %s.', 'fresh'),
+            $site_name
+        ));
+    }
+
+    return fresh_seo_trim_text(sprintf(
+        __('Browse fresh products, compare prices, add items to cart, and place orders with %s.', 'fresh'),
+        $site_name
+    ));
+}
+
+function fresh_seo_canonical_url()
+{
+    $product = fresh_document_title_product();
+
+    if ($product && function_exists('fresh_product_detail_url')) {
+        return fresh_product_detail_url($product->ID);
+    }
+
+    if (is_singular()) {
+        return get_permalink();
+    }
+
+    if (is_tax() || is_category() || is_tag()) {
+        $term = get_queried_object();
+        $term_link = $term ? get_term_link($term) : '';
+
+        return is_wp_error($term_link) ? home_url('/') : $term_link;
+    }
+
+    if (is_front_page()) {
+        return home_url('/');
+    }
+
+    return get_pagenum_link(max(1, get_query_var('paged')));
+}
+
+function fresh_seo_image_url()
+{
+    $product = fresh_document_title_product();
+
+    if ($product && function_exists('fresh_product_image_url')) {
+        return fresh_product_image_url($product->ID, 'large');
+    }
+
+    if (is_singular() && has_post_thumbnail()) {
+        return get_the_post_thumbnail_url(null, 'large');
+    }
+
+    return fresh_default_logo_url();
+}
+
+function fresh_seo_output_meta()
+{
+    if (is_admin()) {
+        return;
+    }
+
+    $description = fresh_seo_description();
+    $canonical = fresh_seo_canonical_url();
+    $title = wp_get_document_title();
+    $image = fresh_seo_image_url();
+    $site_name = get_bloginfo('name', 'display');
+    $type = fresh_document_title_product() || is_singular('fresh_product') ? 'product' : 'website';
+    $noindex = isset($_GET['product_search']) || isset($_GET['sort']);
+
+    if ($noindex) {
+        echo '<meta name="robots" content="noindex,follow">' . "\n";
+    }
+
+    if ($description) {
+        printf('<meta name="description" content="%s">' . "\n", esc_attr($description));
+    }
+
+    printf('<link rel="canonical" href="%s">' . "\n", esc_url($canonical));
+    printf('<meta property="og:site_name" content="%s">' . "\n", esc_attr($site_name));
+    printf('<meta property="og:title" content="%s">' . "\n", esc_attr($title));
+    printf('<meta property="og:description" content="%s">' . "\n", esc_attr($description));
+    printf('<meta property="og:url" content="%s">' . "\n", esc_url($canonical));
+    printf('<meta property="og:type" content="%s">' . "\n", esc_attr($type));
+    printf('<meta property="og:image" content="%s">' . "\n", esc_url($image));
+    echo '<meta name="twitter:card" content="summary_large_image">' . "\n";
+    printf('<meta name="twitter:title" content="%s">' . "\n", esc_attr($title));
+    printf('<meta name="twitter:description" content="%s">' . "\n", esc_attr($description));
+    printf('<meta name="twitter:image" content="%s">' . "\n", esc_url($image));
+}
+add_action('wp_head', 'fresh_seo_output_meta', 2);
+
+function fresh_seo_output_schema()
+{
+    if (is_admin()) {
+        return;
+    }
+
+    $product = fresh_document_title_product();
+    $schema = [
+        '@context' => 'https://schema.org',
+        '@type'    => 'WebSite',
+        'name'     => get_bloginfo('name', 'display'),
+        'url'      => home_url('/'),
+        'potentialAction' => [
+            '@type'       => 'SearchAction',
+            'target'      => add_query_arg(
+                'product_search',
+                '{search_term_string}',
+                function_exists('fresh_page_url') ? fresh_page_url('shop') : home_url('/shop/')
+            ),
+            'query-input' => 'required name=search_term_string',
+        ],
+    ];
+
+    if ($product && function_exists('fresh_product_price') && function_exists('fresh_product_image_url')) {
+        $price = fresh_product_price($product->ID);
+        $schema = [
+            '@context'    => 'https://schema.org',
+            '@type'       => 'Product',
+            'name'        => get_the_title($product),
+            'description' => fresh_seo_description(),
+            'image'       => fresh_product_image_url($product->ID, 'large'),
+            'url'         => function_exists('fresh_product_detail_url') ? fresh_product_detail_url($product->ID) : get_permalink($product),
+            'offers'      => [
+                '@type'         => 'Offer',
+                'priceCurrency' => 'INR',
+                'price'         => number_format((float) $price, 2, '.', ''),
+                'availability'  => 'https://schema.org/InStock',
+                'url'           => function_exists('fresh_product_detail_url') ? fresh_product_detail_url($product->ID) : get_permalink($product),
+            ],
+        ];
+    }
+
+    printf(
+        '<script type="application/ld+json">%s</script>' . "\n",
+        wp_json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+    );
+}
+add_action('wp_head', 'fresh_seo_output_schema', 20);
 
 function fresh_register_logo_setting()
 {
@@ -406,6 +662,26 @@ function fresh_sitemap_posts($post_type, $changefreq = 'weekly', $priority = '0.
     }
 }
 
+function fresh_sitemap_product_detail_urls()
+{
+    if (! function_exists('fresh_product_detail_url')) {
+        return;
+    }
+
+    $products = get_posts([
+        'post_type'      => 'fresh_product',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'orderby'        => 'modified',
+        'order'          => 'DESC',
+        'no_found_rows'  => true,
+    ]);
+
+    foreach ($products as $product) {
+        fresh_sitemap_url_entry(fresh_product_detail_url($product->ID), $product->post_modified_gmt, 'weekly', '0.8');
+    }
+}
+
 function fresh_sitemap_terms($taxonomy, $changefreq = 'weekly', $priority = '0.5')
 {
     $terms = get_terms([
@@ -450,6 +726,7 @@ function fresh_render_sitemap_xml()
     fresh_sitemap_posts('page', 'monthly', '0.8');
     fresh_sitemap_posts('post', 'weekly', '0.7');
     fresh_sitemap_posts('fresh_product', 'weekly', '0.8');
+    fresh_sitemap_product_detail_urls();
     fresh_sitemap_terms('fresh_product_category', 'weekly', '0.6');
     fresh_sitemap_terms('category', 'weekly', '0.5');
 
