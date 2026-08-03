@@ -788,6 +788,15 @@ add_action('template_redirect', 'fresh_redirect_product_post_to_detail_url', 1);
 
 function fresh_sitemap_url_entry($url, $modified = '', $changefreq = 'weekly', $priority = '0.6')
 {
+    static $seen_urls = [];
+
+    $url_key = untrailingslashit($url);
+
+    if (isset($seen_urls[$url_key])) {
+        return;
+    }
+
+    $seen_urls[$url_key] = true;
     $modified = $modified ?: gmdate('Y-m-d H:i:s');
     $timestamp = strtotime($modified . ' UTC');
 
@@ -802,6 +811,7 @@ function fresh_sitemap_url_entry($url, $modified = '', $changefreq = 'weekly', $
 
 function fresh_sitemap_posts($post_type, $changefreq = 'weekly', $priority = '0.6')
 {
+    $excluded_page_slugs = ['cart', 'checkout', 'wishlist', 'product-details'];
     $posts = get_posts([
         'post_type'      => $post_type,
         'post_status'    => 'publish',
@@ -812,7 +822,23 @@ function fresh_sitemap_posts($post_type, $changefreq = 'weekly', $priority = '0.
     ]);
 
     foreach ($posts as $post) {
+        if ($post_type === 'page' && in_array($post->post_name, $excluded_page_slugs, true)) {
+            continue;
+        }
+
         fresh_sitemap_url_entry(get_permalink($post), $post->post_modified_gmt, $changefreq, $priority);
+    }
+}
+
+function fresh_sitemap_static_routes()
+{
+    $routes = [
+        'shop'    => ['monthly', '0.9'],
+        'contact' => ['monthly', '0.7'],
+    ];
+
+    foreach ($routes as $slug => $meta) {
+        fresh_sitemap_url_entry(home_url('/' . $slug . '/'), get_lastpostmodified('GMT'), $meta[0], $meta[1]);
     }
 }
 
@@ -909,7 +935,7 @@ function fresh_sitemap_terms($taxonomy, $changefreq = 'weekly', $priority = '0.5
 {
     $terms = get_terms([
         'taxonomy'   => $taxonomy,
-        'hide_empty' => true,
+        'hide_empty' => false,
     ]);
 
     if (is_wp_error($terms)) {
@@ -917,8 +943,36 @@ function fresh_sitemap_terms($taxonomy, $changefreq = 'weekly', $priority = '0.5
     }
 
     foreach ($terms as $term) {
-        fresh_sitemap_url_entry(get_term_link($term), gmdate('Y-m-d H:i:s'), $changefreq, $priority);
+        $term_link = get_term_link($term);
+
+        if (is_wp_error($term_link)) {
+            continue;
+        }
+
+        fresh_sitemap_url_entry($term_link, fresh_sitemap_term_lastmod($term), $changefreq, $priority);
     }
+}
+
+function fresh_sitemap_term_lastmod($term)
+{
+    $post_types = $term->taxonomy === 'fresh_product_category' ? ['fresh_product'] : ['post'];
+    $latest = get_posts([
+        'post_type'      => $post_types,
+        'post_status'    => 'publish',
+        'posts_per_page' => 1,
+        'orderby'        => 'modified',
+        'order'          => 'DESC',
+        'tax_query'      => [
+            [
+                'taxonomy' => $term->taxonomy,
+                'field'    => 'term_id',
+                'terms'    => $term->term_id,
+            ],
+        ],
+        'no_found_rows'  => true,
+    ]);
+
+    return $latest ? $latest[0]->post_modified_gmt : get_lastpostmodified('GMT');
 }
 
 function fresh_render_sitemap_xml()
@@ -946,6 +1000,7 @@ function fresh_render_sitemap_xml()
     echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 
     fresh_sitemap_url_entry(home_url('/'), get_lastpostmodified('GMT'), 'daily', '1.0');
+    fresh_sitemap_static_routes();
     fresh_sitemap_posts('page', 'monthly', '0.8');
     fresh_sitemap_posts('post', 'weekly', '0.7');
     fresh_sitemap_product_detail_urls();
@@ -956,6 +1011,56 @@ function fresh_render_sitemap_xml()
     exit;
 }
 add_action('template_redirect', 'fresh_render_sitemap_xml', -10);
+
+function fresh_filter_core_sitemap_product_entry($sitemap_entry, $post)
+{
+    if (
+        ! $post instanceof WP_Post ||
+        $post->post_type !== 'fresh_product' ||
+        ! function_exists('fresh_product_detail_url')
+    ) {
+        return $sitemap_entry;
+    }
+
+    $sitemap_entry['loc'] = fresh_product_detail_url($post->ID);
+
+    return $sitemap_entry;
+}
+add_filter('wp_sitemaps_posts_entry', 'fresh_filter_core_sitemap_product_entry', 10, 2);
+
+function fresh_filter_core_sitemap_posts_query_args($args, $post_type)
+{
+    if ($post_type === 'page') {
+        $excluded_pages = get_posts([
+            'post_type'      => 'page',
+            'post_status'    => 'publish',
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+            'post_name__in'  => ['cart', 'checkout', 'wishlist', 'product-details'],
+            'no_found_rows'  => true,
+        ]);
+
+        if ($excluded_pages) {
+            $args['post__not_in'] = array_values(array_unique(array_merge(
+                isset($args['post__not_in']) ? (array) $args['post__not_in'] : [],
+                $excluded_pages
+            )));
+        }
+    }
+
+    return $args;
+}
+add_filter('wp_sitemaps_posts_query_args', 'fresh_filter_core_sitemap_posts_query_args', 10, 2);
+
+function fresh_filter_core_sitemap_taxonomies_query_args($args, $taxonomy)
+{
+    if (in_array($taxonomy, ['category', 'fresh_product_category'], true)) {
+        $args['hide_empty'] = false;
+    }
+
+    return $args;
+}
+add_filter('wp_sitemaps_taxonomies_query_args', 'fresh_filter_core_sitemap_taxonomies_query_args', 10, 2);
 
 function fresh_add_sitemap_to_robots($output, $public)
 {
