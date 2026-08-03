@@ -40,6 +40,40 @@ function fresh_theme_enqueue_assets()
 }
 add_action('wp_enqueue_scripts', 'fresh_theme_enqueue_assets');
 
+function fresh_resource_hints($urls, $relation_type)
+{
+    if ($relation_type === 'preconnect') {
+        $urls[] = [
+            'href'        => 'https://fonts.googleapis.com',
+            'crossorigin' => '',
+        ];
+        $urls[] = [
+            'href'        => 'https://fonts.gstatic.com',
+            'crossorigin' => 'anonymous',
+        ];
+    }
+
+    return $urls;
+}
+add_filter('wp_resource_hints', 'fresh_resource_hints', 10, 2);
+
+function fresh_defer_theme_scripts($tag, $handle)
+{
+    $defer_handles = [
+        'fresh-plugins',
+        'fresh-performance',
+        'fresh-main',
+        'fresh-shop',
+    ];
+
+    if (in_array($handle, $defer_handles, true) && strpos($tag, ' defer') === false) {
+        return str_replace(' src=', ' defer src=', $tag);
+    }
+
+    return $tag;
+}
+add_filter('script_loader_tag', 'fresh_defer_theme_scripts', 10, 2);
+
 function fresh_remove_jquery_migrate($scripts)
 {
     if (is_admin() || empty($scripts->registered['jquery'])) {

@@ -27,6 +27,105 @@ function fresh_primary_menu_fallback()
     <?php
 }
 
+function fresh_slug_needs_english($slug)
+{
+    return strpos((string) $slug, '%') !== false || (bool) preg_match('/[^\x20-\x7E]/', (string) $slug);
+}
+
+function fresh_english_slug_from_text($text, $fallback = 'item')
+{
+    $text = rawurldecode((string) $text);
+    $map = [
+        'அ' => 'a', 'ஆ' => 'aa', 'இ' => 'i', 'ஈ' => 'ee', 'உ' => 'u', 'ஊ' => 'oo',
+        'எ' => 'e', 'ஏ' => 'e', 'ஐ' => 'ai', 'ஒ' => 'o', 'ஓ' => 'o', 'ஔ' => 'au',
+        'க' => 'ka', 'ங' => 'nga', 'ச' => 'sa', 'ஜ' => 'ja', 'ஞ' => 'nya',
+        'ட' => 'ta', 'ண' => 'na', 'த' => 'tha', 'ந' => 'na', 'ன' => 'na',
+        'ப' => 'pa', 'ம' => 'ma', 'ய' => 'ya', 'ர' => 'ra', 'ற' => 'ra',
+        'ல' => 'la', 'ள' => 'la', 'ழ' => 'zha', 'வ' => 'va', 'ஷ' => 'sha',
+        'ஸ' => 'sa', 'ஹ' => 'ha',
+        'ா' => 'a', 'ி' => 'i', 'ீ' => 'ee', 'ு' => 'u', 'ூ' => 'oo',
+        'ெ' => 'e', 'ே' => 'e', 'ை' => 'ai', 'ொ' => 'o', 'ோ' => 'o', 'ௌ' => 'au',
+        '்' => '', 'ஃ' => '',
+        '௦' => '0', '௧' => '1', '௨' => '2', '௩' => '3', '௪' => '4',
+        '௫' => '5', '௬' => '6', '௭' => '7', '௮' => '8', '௯' => '9',
+    ];
+
+    $text = strtr($text, $map);
+    $text = remove_accents($text);
+    $text = strtolower($text);
+    $text = preg_replace('/[^a-z0-9]+/', '-', $text);
+    $text = trim((string) $text, '-');
+
+    return $text ?: sanitize_key($fallback);
+}
+
+function fresh_sanitize_title_to_english($title, $raw_title, $context)
+{
+    if ($context !== 'save' || ! fresh_slug_needs_english($raw_title . $title)) {
+        return $title;
+    }
+
+    return fresh_english_slug_from_text($raw_title ?: $title, $title ?: 'item');
+}
+add_filter('sanitize_title', 'fresh_sanitize_title_to_english', 9, 3);
+
+function fresh_update_existing_non_english_slugs()
+{
+    $version = '2026-08-english-slugs-v1';
+
+    if (get_option('fresh_english_slugs_version') === $version || wp_installing()) {
+        return;
+    }
+
+    $posts = get_posts([
+        'post_type'      => ['post', 'page', 'fresh_product'],
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'no_found_rows'  => true,
+    ]);
+
+    foreach ($posts as $post) {
+        if (! fresh_slug_needs_english($post->post_name)) {
+            continue;
+        }
+
+        $base_slug = fresh_english_slug_from_text($post->post_title, $post->post_type . '-' . $post->ID);
+        $unique_slug = wp_unique_post_slug($base_slug, $post->ID, $post->post_status, $post->post_type, $post->post_parent);
+
+        wp_update_post([
+            'ID'        => $post->ID,
+            'post_name' => $unique_slug,
+        ]);
+    }
+
+    foreach (['category', 'fresh_product_category'] as $taxonomy) {
+        $terms = get_terms([
+            'taxonomy'   => $taxonomy,
+            'hide_empty' => false,
+        ]);
+
+        if (is_wp_error($terms)) {
+            continue;
+        }
+
+        foreach ($terms as $term) {
+            if (! fresh_slug_needs_english($term->slug)) {
+                continue;
+            }
+
+            $base_slug = fresh_english_slug_from_text($term->name, $taxonomy . '-' . $term->term_id);
+            $term->slug = $base_slug;
+
+            wp_update_term($term->term_id, $taxonomy, [
+                'slug' => wp_unique_term_slug($base_slug, $term),
+            ]);
+        }
+    }
+
+    update_option('fresh_english_slugs_version', $version, false);
+}
+add_action('init', 'fresh_update_existing_non_english_slugs', 30);
+
 function fresh_remove_about_from_primary_menu($items, $args)
 {
     if (empty($args->theme_location) || $args->theme_location !== 'primary') {
@@ -200,6 +299,12 @@ add_filter('document_title_separator', 'fresh_document_title_separator');
 
 function fresh_document_title_product()
 {
+    if (is_singular('fresh_product')) {
+        $product = get_post();
+
+        return $product instanceof WP_Post && $product->post_status === 'publish' ? $product : null;
+    }
+
     if (empty($_GET['product'])) {
         return null;
     }
@@ -349,7 +454,7 @@ function fresh_seo_is_low_value_page()
 
     $route = fresh_seo_current_route_slug();
 
-    return in_array($route, ['cart', 'checkout', 'wishlist'], true);
+    return in_array($route, ['cart', 'checkout', 'wishlist', 'product-details'], true);
 }
 
 function fresh_seo_canonical_url()
@@ -507,6 +612,40 @@ function fresh_seo_local_business_schema()
     ];
 }
 
+function fresh_seo_webpage_schema()
+{
+    $type = is_tax() || is_category() || is_post_type_archive() ? 'CollectionPage' : 'WebPage';
+    $product = fresh_document_title_product();
+
+    if ($product) {
+        $type = 'ItemPage';
+    }
+
+    return [
+        '@context'    => 'https://schema.org',
+        '@type'       => $type,
+        'name'        => wp_get_document_title(),
+        'description' => fresh_seo_description(),
+        'url'         => fresh_seo_canonical_url(),
+        'isPartOf'    => [
+            '@type' => 'WebSite',
+            'name'  => get_bloginfo('name', 'display'),
+            'url'   => home_url('/'),
+        ],
+    ];
+}
+
+function fresh_seo_organization_schema()
+{
+    return [
+        '@context' => 'https://schema.org',
+        '@type'    => 'Organization',
+        'name'     => get_bloginfo('name', 'display'),
+        'url'      => home_url('/'),
+        'logo'     => fresh_default_logo_url(),
+    ];
+}
+
 function fresh_seo_output_schema()
 {
     if (is_admin()) {
@@ -564,7 +703,7 @@ function fresh_seo_output_schema()
         }
     }
 
-    $schemas = [$schema, fresh_seo_breadcrumb_schema(), fresh_seo_local_business_schema()];
+    $schemas = [$schema, fresh_seo_webpage_schema(), fresh_seo_breadcrumb_schema(), fresh_seo_organization_schema(), fresh_seo_local_business_schema()];
 
     if ($product) {
         $faq_items = function_exists('fresh_product_faqs') ? fresh_product_faqs($product->ID) : [];
@@ -581,11 +720,13 @@ function fresh_seo_output_schema()
             ];
         }
 
-        $schemas[] = [
-            '@context'   => 'https://schema.org',
-            '@type'      => 'FAQPage',
-            'mainEntity' => $main_entity,
-        ];
+        if ($main_entity) {
+            $schemas[] = [
+                '@context'   => 'https://schema.org',
+                '@type'      => 'FAQPage',
+                'mainEntity' => $main_entity,
+            ];
+        }
     }
 
     printf(
@@ -775,16 +916,27 @@ function fresh_static_route_template()
 }
 add_action('template_redirect', 'fresh_static_route_template', 0);
 
-function fresh_redirect_product_post_to_detail_url()
+function fresh_redirect_legacy_product_detail_url()
 {
-    if (! is_singular('fresh_product') || ! function_exists('fresh_product_detail_url')) {
+    if (
+        fresh_seo_current_route_slug() !== 'product-details' ||
+        empty($_GET['product']) ||
+        ! function_exists('fresh_product_detail_url')
+    ) {
         return;
     }
 
-    wp_safe_redirect(fresh_product_detail_url(get_the_ID()), 301);
+    $product_id = absint(wp_unslash($_GET['product']));
+    $product = $product_id ? get_post($product_id) : null;
+
+    if (! $product || $product->post_type !== 'fresh_product' || $product->post_status !== 'publish') {
+        return;
+    }
+
+    wp_safe_redirect(fresh_product_detail_url($product->ID), 301);
     exit;
 }
-add_action('template_redirect', 'fresh_redirect_product_post_to_detail_url', 1);
+add_action('template_redirect', 'fresh_redirect_legacy_product_detail_url', 1);
 
 function fresh_sitemap_url_entry($url, $modified = '', $changefreq = 'weekly', $priority = '0.6')
 {

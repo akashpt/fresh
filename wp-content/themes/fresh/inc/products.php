@@ -47,6 +47,19 @@ function fresh_register_product_post_types()
 }
 add_action('init', 'fresh_register_product_post_types');
 
+function fresh_flush_rewrite_rules_once()
+{
+    $rewrite_version = '2026-08-product-slug-urls';
+
+    if (get_option('fresh_rewrite_rules_version') === $rewrite_version) {
+        return;
+    }
+
+    flush_rewrite_rules(false);
+    update_option('fresh_rewrite_rules_version', $rewrite_version, false);
+}
+add_action('init', 'fresh_flush_rewrite_rules_once', 20);
+
 function fresh_register_order_statuses()
 {
     register_post_status('fresh_completed', [
@@ -985,7 +998,10 @@ function fresh_trim_product_title($product, $length = 35)
 
 function fresh_product_detail_url($product_id)
 {
-    return add_query_arg('product', absint($product_id), fresh_page_url('product-details'));
+    $product_id = absint($product_id);
+    $permalink = $product_id ? get_permalink($product_id) : '';
+
+    return $permalink ?: home_url('/products/');
 }
 
 function fresh_product_placeholder_image_url()

@@ -34,15 +34,19 @@ $icons = ['category-1.png', 'category-2.png', 'category-3.png', 'category-4.png'
             </div>
             <?php if (! is_wp_error($terms)) : ?>
                 <?php foreach ($terms as $index => $term) : ?>
+                    <?php
+                    $term_link = get_term_link($term);
+                    $term_url = is_wp_error($term_link) ? fresh_page_url('shop') : $term_link;
+                    ?>
                     <div class="col-12">
                         <div class="ltn__category-item ltn__category-item-3 text-center">
                             <div class="ltn__category-item-img">
-                                <a href="<?php echo esc_url(add_query_arg('category', $term->slug, fresh_page_url('shop'))); ?>">
+                                <a href="<?php echo esc_url($term_url); ?>">
                                     <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/icons/icon-img/' . $icons[$index % count($icons)], '', ['fallback_width' => 120, 'fallback_height' => 90]); ?>>
                                 </a>
                             </div>
                             <div class="ltn__category-item-name">
-                                <h5><a href="<?php echo esc_url(add_query_arg('category', $term->slug, fresh_page_url('shop'))); ?>"><?php echo esc_html($term->name); ?></a></h5>
+                                <h5><a href="<?php echo esc_url($term_url); ?>"><?php echo esc_html($term->name); ?></a></h5>
                                 <h6>(<?php echo esc_html($term->count); ?> <?php esc_html_e('item', 'fresh'); ?>)</h6>
                             </div>
                         </div>

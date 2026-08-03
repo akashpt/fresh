@@ -28,11 +28,11 @@
     ?>
     <?php if (! empty($fresh_marquee_messages)) : ?>
         <div class="fresh-top-marquee" aria-label="<?php esc_attr_e('Store updates', 'fresh'); ?>">
-            <marquee behavior="scroll" direction="left" scrollamount="5">
+            <div class="fresh-top-marquee-track">
                 <?php foreach ($fresh_marquee_messages as $fresh_marquee_message) : ?>
                     <span class="fresh-top-marquee-item"><?php echo esc_html($fresh_marquee_message); ?></span>
                 <?php endforeach; ?>
-            </marquee>
+            </div>
         </div>
     <?php endif; ?>
     <!-- HEADER AREA START (header-5) -->

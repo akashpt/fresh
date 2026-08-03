@@ -4,7 +4,7 @@ $limit = isset($args['limit']) ? (int) $args['limit'] : 8;
 $limit = $limit === -1 ? -1 : max(1, $limit);
 $show_counter = ! empty($args['show_counter']);
 $show_filters = ! empty($args['show_filters']);
-$selected_category = ! empty($_GET['category']) ? sanitize_title(wp_unslash($_GET['category'])) : '';
+$selected_category = ! empty($args['category']) ? sanitize_title($args['category']) : (! empty($_GET['category']) ? sanitize_title(wp_unslash($_GET['category'])) : '');
 $selected_sort = ! empty($_GET['sort']) ? sanitize_key(wp_unslash($_GET['sort'])) : 'latest';
 $selected_search = ! empty($_GET['product_search']) ? sanitize_text_field(wp_unslash($_GET['product_search'])) : '';
 $shop_url = fresh_page_url('shop');
@@ -49,7 +49,7 @@ if ($selected_sort === 'price-low') {
 $products = new WP_Query($query_args);
 $categories = get_terms([
     'taxonomy'   => 'fresh_product_category',
-    'hide_empty' => true,
+    'hide_empty' => false,
 ]);
 $product_counts = wp_count_posts('fresh_product');
 $all_products_count = isset($product_counts->publish) ? (int) $product_counts->publish : 0;
@@ -134,11 +134,12 @@ $sort_options = [
                             <?php if (! is_wp_error($categories)) : ?>
                                 <?php foreach ($categories as $category) : ?>
                                     <?php
+                                    $term_link = get_term_link($category);
+                                    $category_base_url = is_wp_error($term_link) ? add_query_arg('category', $category->slug, $shop_url) : $term_link;
                                     $category_url = add_query_arg(array_filter([
-                                        'category' => $category->slug,
-                                        'sort'     => $selected_sort !== 'latest' ? $selected_sort : '',
+                                        'sort' => $selected_sort !== 'latest' ? $selected_sort : '',
                                         'product_search' => $selected_search,
-                                    ]), $shop_url);
+                                    ]), $category_base_url);
                                     ?>
                                     <a class="<?php echo $selected_category === $category->slug ? 'is-active' : ''; ?>" href="<?php echo esc_url($category_url); ?>">
                                         <span><?php echo esc_html($category->name); ?></span>
@@ -190,14 +191,13 @@ $sort_options = [
                         <?php
                         while ($products->have_posts()) :
                             $products->the_post();
-                            $card_args = ['product' => get_post()];
+                            $card_args = [
+                                'product'        => get_post(),
+                                'product_number' => $products->current_post + 1,
+                            ];
 
                             if ($show_filters) {
                                 $card_args['column_class'] = 'col-xl-4 col-lg-4 col-md-6 col-6';
-                            }
-
-                            if ($show_counter) {
-                                $card_args['product_number'] = $products->current_post + 1;
                             }
 
                             get_template_part('template-parts/products/product-card', null, $card_args);

@@ -19,6 +19,12 @@ $cart = fresh_get_cart();
 $cart_quantity = isset($cart[$product->ID]) ? absint($cart[$product->ID]) : 0;
 $card_quantity = $cart_quantity > 0 ? $cart_quantity : 1;
 $product_image_url = fresh_product_image_url($product->ID);
+$image_args = ['fallback_width' => 300, 'fallback_height' => 300];
+
+if ($product_number > 0 && $product_number <= 4) {
+    $image_args['loading'] = 'eager';
+    $image_args['fetchpriority'] = 'high';
+}
 ?>
 
 <div class="<?php echo esc_attr($column_class); ?>">
@@ -26,7 +32,7 @@ $product_image_url = fresh_product_image_url($product->ID);
         <div class="product-img">
              
             <a href="<?php echo esc_url($detail_url); ?>">
-                <img <?php echo fresh_image_attrs($product_image_url, $product_title, ['fallback_width' => 300, 'fallback_height' => 300]); ?>>
+                <img <?php echo fresh_image_attrs($product_image_url, $product_title, $image_args); ?>>
             </a>
             <div class="product-badge">
                 <ul>

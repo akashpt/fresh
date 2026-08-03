@@ -160,11 +160,11 @@
                                             <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/product/1.png', '', ['fallback_width' => 300, 'fallback_height' => 300]); ?>>
                                         </div>
                                          <div class="modal-product-info">
-                                            <h5><a href="product-details.html">Vegetables Juices</a></h5>
-                                            <p class="added-cart"><i class="fa fa-check-circle"></i>  Successfully added to your Cart</p>
+                                            <h5><a href="<?php echo esc_url(fresh_page_url('shop')); ?>"><?php esc_html_e('Product added', 'fresh'); ?></a></h5>
+                                            <p class="added-cart"><i class="fa fa-check-circle" aria-hidden="true"></i> <?php esc_html_e('Successfully added to your cart', 'fresh'); ?></p>
                                             <div class="btn-wrapper">
-                                                <a href="cart.html" class="theme-btn-1 btn btn-effect-1">View Cart</a>
-                                                <a href="checkout.html" class="theme-btn-2 btn btn-effect-2">Checkout</a>
+                                                <a href="<?php echo esc_url(fresh_page_url('cart')); ?>" class="theme-btn-1 btn btn-effect-1"><?php esc_html_e('View Cart', 'fresh'); ?></a>
+                                                <a href="<?php echo esc_url(fresh_page_url('checkout')); ?>" class="theme-btn-2 btn btn-effect-2"><?php esc_html_e('Checkout', 'fresh'); ?></a>
                                             </div>
                                          </div>
                                          <!-- additional-info -->
@@ -204,10 +204,10 @@
                                             <img <?php echo fresh_image_attrs(get_template_directory_uri() . '/assets/img/product/7.png', '', ['fallback_width' => 300, 'fallback_height' => 300]); ?>>
                                         </div>
                                          <div class="modal-product-info">
-                                            <h5><a href="product-details.html">Vegetables Juices</a></h5>
-                                            <p class="added-cart"><i class="fa fa-check-circle"></i>  Successfully added to your Wishlist</p>
+                                            <h5><a href="<?php echo esc_url(fresh_page_url('shop')); ?>"><?php esc_html_e('Product saved', 'fresh'); ?></a></h5>
+                                            <p class="added-cart"><i class="fa fa-check-circle" aria-hidden="true"></i> <?php esc_html_e('Successfully added to your wishlist', 'fresh'); ?></p>
                                             <div class="btn-wrapper">
-                                                <a href="<?php echo esc_url(fresh_page_url('wishlist')); ?>" class="theme-btn-1 btn btn-effect-1">View Wishlist</a>
+                                                <a href="<?php echo esc_url(fresh_page_url('wishlist')); ?>" class="theme-btn-1 btn btn-effect-1"><?php esc_html_e('View Wishlist', 'fresh'); ?></a>
                                             </div>
                                          </div>
                                          <!-- additional-info -->
