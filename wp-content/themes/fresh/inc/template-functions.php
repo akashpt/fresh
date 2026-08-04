@@ -956,11 +956,12 @@ function fresh_static_route_template()
     }
 
     $templates = [
-        'cart'     => 'cart.php',
-        'checkout' => 'checkout.php',
-        'shop'     => 'shop.php',
-        'wishlist' => 'wishlist.php',
-        'contact'  => 'contact.php',
+        'cart'          => 'cart.php',
+        'checkout'      => 'checkout.php',
+        'shop'          => 'shop.php',
+        'wishlist'      => 'wishlist.php',
+        'contact'       => 'contact.php',
+        'return-policy' => 'return-policy.php',
     ];
 
     if (empty($templates[$slug])) {
@@ -1050,8 +1051,9 @@ function fresh_sitemap_posts($post_type, $changefreq = 'weekly', $priority = '0.
 function fresh_sitemap_static_routes()
 {
     $routes = [
-        'shop'    => ['monthly', '0.9'],
-        'contact' => ['monthly', '0.7'],
+        'shop'          => ['monthly', '0.9'],
+        'contact'       => ['monthly', '0.7'],
+        'return-policy' => ['yearly', '0.5'],
     ];
 
     foreach ($routes as $slug => $meta) {
