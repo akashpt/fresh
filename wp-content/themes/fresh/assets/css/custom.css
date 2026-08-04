@@ -3046,3 +3046,28 @@ border: 1px solid #e2e2e2;
     transform: none;
   }
 }
+
+.fresh-skip-link {
+  background: #0a472e;
+  color: #fff;
+  left: 16px;
+  padding: 10px 14px;
+  position: absolute;
+  top: -48px;
+  z-index: 10000;
+}
+
+.fresh-skip-link:focus {
+  color: #fff;
+  top: 16px;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #0a472e;
+  outline-offset: 3px;
+}

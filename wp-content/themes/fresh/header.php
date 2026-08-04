@@ -16,7 +16,7 @@
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 
-
+    <a class="fresh-skip-link" href="#primary"><?php esc_html_e('Skip to content', 'fresh'); ?></a>
 
     <div class="body-wrapper">
     <?php

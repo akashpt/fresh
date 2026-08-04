@@ -61,6 +61,10 @@ function fresh_english_slug_from_text($text, $fallback = 'item')
 
 function fresh_sanitize_title_to_english($title, $raw_title, $context)
 {
+    if (! apply_filters('fresh_enable_english_slug_generation', false)) {
+        return $title;
+    }
+
     if ($context !== 'save' || ! fresh_slug_needs_english($raw_title . $title)) {
         return $title;
     }
@@ -71,6 +75,10 @@ add_filter('sanitize_title', 'fresh_sanitize_title_to_english', 9, 3);
 
 function fresh_update_existing_non_english_slugs()
 {
+    if (! apply_filters('fresh_enable_existing_slug_migration', false)) {
+        return;
+    }
+
     $version = '2026-08-english-slugs-v1';
 
     if (get_option('fresh_english_slugs_version') === $version || wp_installing()) {
@@ -232,6 +240,21 @@ function fresh_image_attrs($url, $alt = '', $args = [])
         $attrs['fetchpriority'] = $args['fetchpriority'];
     }
 
+    $attachment_id = attachment_url_to_postid($url);
+
+    if ($attachment_id) {
+        $srcset = wp_get_attachment_image_srcset($attachment_id, 'full');
+        $sizes = wp_get_attachment_image_sizes($attachment_id, 'full');
+
+        if ($srcset) {
+            $attrs['srcset'] = esc_attr($srcset);
+        }
+
+        if ($sizes) {
+            $attrs['sizes'] = esc_attr($sizes);
+        }
+    }
+
     return implode(' ', array_map(
         function ($name, $value) {
             return sprintf('%s="%s"', esc_attr($name), esc_attr($value));
@@ -258,6 +281,25 @@ function fresh_preload_critical_assets()
     );
 }
 add_action('wp_head', 'fresh_preload_critical_assets', 1);
+
+function fresh_pagination_resource_links()
+{
+    if (is_admin() || ! (is_home() || is_archive() || is_search())) {
+        return;
+    }
+
+    $current_page = max(1, (int) get_query_var('paged'));
+    $max_pages = isset($GLOBALS['wp_query']->max_num_pages) ? (int) $GLOBALS['wp_query']->max_num_pages : 0;
+
+    if ($current_page > 1) {
+        printf('<link rel="prev" href="%s">' . "\n", esc_url(get_pagenum_link($current_page - 1)));
+    }
+
+    if ($max_pages && $current_page < $max_pages) {
+        printf('<link rel="next" href="%s">' . "\n", esc_url(get_pagenum_link($current_page + 1)));
+    }
+}
+add_action('wp_head', 'fresh_pagination_resource_links', 3);
 
 function fresh_site_logo()
 {
@@ -538,6 +580,18 @@ function fresh_seo_output_meta()
 }
 add_action('wp_head', 'fresh_seo_output_meta', 2);
 
+function fresh_send_robots_header()
+{
+    if (is_admin()) {
+        return;
+    }
+
+    if (fresh_seo_is_low_value_page() || isset($_GET['product_search']) || isset($_GET['sort'])) {
+        header('X-Robots-Tag: noindex, follow', true);
+    }
+}
+add_action('send_headers', 'fresh_send_robots_header');
+
 function fresh_seo_breadcrumb_schema($current_title = '')
 {
     $items = [
@@ -653,6 +707,8 @@ function fresh_seo_output_schema()
     }
 
     $product = fresh_document_title_product();
+    $search_target = add_query_arg('product_search', 'FRESH_SEARCH_TERM', function_exists('fresh_page_url') ? fresh_page_url('shop') : home_url('/shop/'));
+    $search_target = str_replace('FRESH_SEARCH_TERM', '{search_term_string}', $search_target);
     $schema = [
         '@context' => 'https://schema.org',
         '@type'    => 'WebSite',
@@ -660,11 +716,7 @@ function fresh_seo_output_schema()
         'url'      => home_url('/'),
         'potentialAction' => [
             '@type'       => 'SearchAction',
-            'target'      => add_query_arg(
-                'product_search',
-                '{search_term_string}',
-                function_exists('fresh_page_url') ? fresh_page_url('shop') : home_url('/shop/')
-            ),
+            'target'      => $search_target,
             'query-input' => 'required name=search_term_string',
         ],
     ];
@@ -686,7 +738,12 @@ function fresh_seo_output_schema()
                 'priceCurrency' => 'INR',
                 'price'         => number_format((float) $price, 2, '.', ''),
                 'availability'  => 'https://schema.org/InStock',
+                'itemCondition' => 'https://schema.org/NewCondition',
                 'url'           => function_exists('fresh_product_detail_url') ? fresh_product_detail_url($product->ID) : get_permalink($product),
+            ],
+            'brand'       => [
+                '@type' => 'Brand',
+                'name'  => get_bloginfo('name', 'display'),
             ],
         ];
 
@@ -703,7 +760,7 @@ function fresh_seo_output_schema()
         }
     }
 
-    $schemas = [$schema, fresh_seo_webpage_schema(), fresh_seo_breadcrumb_schema(), fresh_seo_organization_schema(), fresh_seo_local_business_schema()];
+    $schemas = [$schema, fresh_seo_webpage_schema(), fresh_seo_breadcrumb_schema(), fresh_seo_organization_schema()];
 
     if ($product) {
         $faq_items = function_exists('fresh_product_faqs') ? fresh_product_faqs($product->ID) : [];
@@ -729,9 +786,17 @@ function fresh_seo_output_schema()
         }
     }
 
+    $graph = array_map(function ($item) {
+        unset($item['@context']);
+        return $item;
+    }, $schemas);
+
     printf(
         '<script type="application/ld+json">%s</script>' . "\n",
-        wp_json_encode($schemas, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+        wp_json_encode([
+            '@context' => 'https://schema.org',
+            '@graph'   => $graph,
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
     );
 }
 add_action('wp_head', 'fresh_seo_output_schema', 20);
